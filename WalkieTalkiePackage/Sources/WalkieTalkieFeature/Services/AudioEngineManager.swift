@@ -87,6 +87,7 @@ final class AudioEngineManager {
         return true
     }
 
+    /// Stop recording, apply radio effect, and return the processed URL.
     func stopRecording() -> URL? {
         progressTask?.cancel()
         progressTask = nil
@@ -105,22 +106,20 @@ final class AudioEngineManager {
 
         recordingURL = nil
         recordingStart = nil
-
-        guard duration > 0.3 else {
-            recordingState = .idle
-            return nil
-        }
-
-        // Apply radio crackle effect offline
-        let processedURL = applyRadioEffect(to: url)
-
-        playRogerBeep()
         recordingState = .idle
 
+        guard duration > 0.3 else { return nil }
+
+        let processedURL = applyRadioEffect(to: url)
+        playRogerBeep()
         return processedURL
     }
 
     // MARK: - Radio Effect (offline post-processing)
+    // "Touche" preset: HP 200 Hz, LP 4500 Hz, radioTower 3% — très léger grésillement radio
+    private let fxHighPass: Float = 200
+    private let fxLowPass: Float = 4500
+    private let fxDistortionMix: Float = 3
 
     private func applyRadioEffect(to inputURL: URL) -> URL? {
         let outputURL = FileManager.default.temporaryDirectory
@@ -133,45 +132,42 @@ final class AudioEngineManager {
             let frameCount = AVAudioFrameCount(inputFile.length)
 
             guard let inputBuffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
-                return inputURL
+                return nil
             }
             try inputFile.read(into: inputBuffer)
 
-            // Set up offline engine
+            // Set up offline engine: player → EQ → distortion → mainMixer
             let engine = AVAudioEngine()
-
             let player = AVAudioPlayerNode()
             engine.attach(player)
 
-            // EQ: gentle band-pass for radio color (wider range to keep clarity)
             let eq = AVAudioUnitEQ(numberOfBands: 2)
             eq.bands[0].filterType = .highPass
-            eq.bands[0].frequency = 200
+            eq.bands[0].frequency = fxHighPass
             eq.bands[0].bypass = false
             eq.bands[1].filterType = .lowPass
-            eq.bands[1].frequency = 4000
+            eq.bands[1].frequency = fxLowPass
             eq.bands[1].bypass = false
             engine.attach(eq)
 
-            // Very light distortion for subtle radio texture (voice stays fully clear)
             let distortion = AVAudioUnitDistortion()
             distortion.loadFactoryPreset(.speechRadioTower)
-            distortion.wetDryMix = 5
+            distortion.wetDryMix = fxDistortionMix
             engine.attach(distortion)
 
-            // Connect: player → EQ → distortion → mainMixer
             engine.connect(player, to: eq, format: format)
             engine.connect(eq, to: distortion, format: format)
             engine.connect(distortion, to: engine.mainMixerNode, format: format)
 
-            // Enable offline manual rendering
-            try engine.enableManualRenderingMode(.offline, format: format, maximumFrameCount: 4096)
+            // Offline manual rendering
+            let maxFrames: AVAudioFrameCount = 4096
+            try engine.enableManualRenderingMode(.offline, format: format, maximumFrameCount: maxFrames)
             try engine.start()
 
-            player.scheduleBuffer(inputBuffer, completionHandler: nil)
+            // Schedule buffer BEFORE calling play
+            player.scheduleBuffer(inputBuffer, at: nil, options: [], completionHandler: nil)
             player.play()
 
-            // Write output
             let outputSettings: [String: Any] = [
                 AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
                 AVSampleRateKey: format.sampleRate,
@@ -180,39 +176,121 @@ final class AudioEngineManager {
             ]
             let outputFile = try AVAudioFile(forWriting: outputURL, settings: outputSettings)
 
-            let renderBuffer = AVAudioPCMBuffer(pcmFormat: engine.manualRenderingFormat,
-                                                 frameCapacity: engine.manualRenderingMaximumFrameCount)!
+            guard let renderBuffer = AVAudioPCMBuffer(pcmFormat: engine.manualRenderingFormat,
+                                                      frameCapacity: maxFrames) else {
+                return nil
+            }
 
-            var remainingFrames = frameCount
-            while remainingFrames > 0 {
-                let framesToRender = min(renderBuffer.frameCapacity, remainingFrames)
+            // Render until we've processed all input frames (plus a tail for effects)
+            let tailFrames: AVAudioFrameCount = 4096 // give effects a tail
+            let totalToRender = frameCount + tailFrames
+            var rendered: AVAudioFrameCount = 0
+
+            while rendered < totalToRender {
+                let framesToRender = min(maxFrames, totalToRender - rendered)
                 let status = try engine.renderOffline(framesToRender, to: renderBuffer)
 
                 switch status {
                 case .success:
-                    try outputFile.write(from: renderBuffer)
-                    remainingFrames -= framesToRender
+                    if renderBuffer.frameLength > 0 {
+                        try outputFile.write(from: renderBuffer)
+                    }
+                    rendered += framesToRender
                 case .insufficientDataFromInputNode:
-                    remainingFrames -= framesToRender
-                case .error, .cannotDoInCurrentContext:
-                    print("[Audio] ⚠️ Render error, using original")
-                    return inputURL
+                    // Player finished but engine might still have tail - write what we have
+                    if renderBuffer.frameLength > 0 {
+                        try outputFile.write(from: renderBuffer)
+                    }
+                    rendered += framesToRender
+                case .cannotDoInCurrentContext:
+                    // Retry
+                    continue
+                case .error:
+                    print("[Audio] ❌ renderOffline error")
+                    engine.stop()
+                    return nil
                 @unknown default:
-                    return inputURL
+                    engine.stop()
+                    return nil
                 }
             }
 
             engine.stop()
-
-            // Clean up original
-            try? FileManager.default.removeItem(at: inputURL)
-            print("[Audio] ✅ Radio effect applied")
+            print("[Audio] ✅ Applied radio effect → \(outputURL.lastPathComponent)")
             return outputURL
 
         } catch {
-            print("[Audio] ⚠️ Radio effect failed: \(error), using original")
-            return inputURL
+            print("[Audio] ❌ applyRadioEffect failed: \(error)")
+            return nil
         }
+    }
+
+    // MARK: - Synthesized Reaction Sound
+
+    /// Generate a short reaction audio file (AAC/m4a) with given tones
+    /// Returns a URL to the generated file
+    func synthesizeReaction(tones: [Double]) throws -> URL {
+        let sampleRate: Double = 22050
+        let toneDuration: Double = 0.08
+        let gapDuration: Double = 0.03
+        let frameCountPerTone = Int(sampleRate * toneDuration)
+        let gapFrames = Int(sampleRate * gapDuration)
+
+        let totalFrames = tones.count * frameCountPerTone + max(0, tones.count - 1) * gapFrames
+        var samples = [Float](repeating: 0, count: totalFrames)
+
+        var offset = 0
+        for (i, freq) in tones.enumerated() {
+            for f in 0..<frameCountPerTone {
+                let t = Double(f) / sampleRate
+                // Slight envelope to avoid clicks
+                let env = envelope(t: t, duration: toneDuration)
+                samples[offset + f] = Float(sin(2 * .pi * freq * t) * 0.35 * env)
+            }
+            offset += frameCountPerTone
+            if i < tones.count - 1 {
+                offset += gapFrames
+            }
+        }
+
+        // Write to m4a AAC file
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("m4a")
+
+        guard let pcmFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32,
+                                             sampleRate: sampleRate,
+                                             channels: 1,
+                                             interleaved: false),
+              let buffer = AVAudioPCMBuffer(pcmFormat: pcmFormat, frameCapacity: AVAudioFrameCount(samples.count))
+        else { throw NSError(domain: "Audio", code: -1) }
+
+        buffer.frameLength = AVAudioFrameCount(samples.count)
+        let channelData = buffer.floatChannelData![0]
+        for i in 0..<samples.count {
+            channelData[i] = samples[i]
+        }
+
+        let settings: [String: Any] = [
+            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+            AVSampleRateKey: sampleRate,
+            AVNumberOfChannelsKey: 1,
+            AVEncoderBitRateKey: 32000,
+        ]
+        let file = try AVAudioFile(forWriting: url, settings: settings)
+        try file.write(from: buffer)
+
+        return url
+    }
+
+    private func envelope(t: Double, duration: Double) -> Double {
+        let fadeDuration = 0.01
+        if t < fadeDuration {
+            return t / fadeDuration
+        } else if t > duration - fadeDuration {
+            return (duration - t) / fadeDuration
+        }
+        return 1
     }
 
     // MARK: - Playback

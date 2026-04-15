@@ -124,6 +124,28 @@ final class CloudKitManager {
         }
     }
 
+    /// Kick a specific member from a frequency (by recordName)
+    func kickMember(_ member: FrequencyMember) async throws {
+        try await publicDB.deleteRecord(withID: member.ckRecordID)
+    }
+
+    /// Update current user's speaking timestamp (live indicator)
+    func setSpeaking(_ frequency: Frequency, userID: String, until: Date?) async throws {
+        let predicate = NSPredicate(format: "frequencyRef == %@ AND userID == %@",
+                                    CKRecord.Reference(recordID: frequency.ckRecordID, action: .none), userID)
+        let query = CKQuery(recordType: FrequencyMember.recordType, predicate: predicate)
+        let (results, _) = try await publicDB.records(matching: query, resultsLimit: 1)
+        guard let (_, result) = results.first,
+              let record = try? result.get() else { return }
+
+        if let until {
+            record["speakingUntil"] = until
+        } else {
+            record["speakingUntil"] = nil
+        }
+        _ = try await publicDB.save(record)
+    }
+
     func fetchMembers(for frequency: Frequency) async throws -> [FrequencyMember] {
         let ref = CKRecord.Reference(recordID: frequency.ckRecordID, action: .none)
         let predicate = NSPredicate(format: "frequencyRef == %@", ref)
@@ -195,8 +217,14 @@ final class CloudKitManager {
         )
 
         let info = CKSubscription.NotificationInfo()
+        // User-visible notification on lock screen (even if app is killed)
+        info.title = frequency.name
+        info.alertBody = "Nouveau vocal"
+        info.soundName = "default"
+        info.shouldBadge = true
+        // Also wake app to update badge/local state
         info.shouldSendContentAvailable = true
-        info.desiredKeys = ["senderName"] // Include sender name in push payload
+        info.desiredKeys = ["senderName"]
         subscription.notificationInfo = info
 
         _ = try await publicDB.save(subscription)

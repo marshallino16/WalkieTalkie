@@ -77,11 +77,13 @@ struct PushToTalkButton: View {
                 .onChanged { _ in
                     if !isPressing {
                         isPressing = true
+                        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
                         onStart()
                     }
                 }
                 .onEnded { _ in
                     isPressing = false
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     onStop()
                 }
         )

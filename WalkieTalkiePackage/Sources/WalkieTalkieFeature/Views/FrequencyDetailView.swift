@@ -10,7 +10,7 @@ struct FrequencyDetailView: View {
     @State private var showDeleteConfirm = false
     @State private var codeCopied = false
 
-    private var isCreator: Bool { viewModel.frequency.creatorID == viewModel.userID }
+    private var isCreator: Bool { viewModel.isCreator }
 
     var body: some View {
         ZStack {
@@ -46,7 +46,26 @@ struct FrequencyDetailView: View {
 
                 // Control buttons row
                 controlsRow
-                    .padding(.bottom, 16)
+                    .padding(.bottom, 8)
+
+                // Live speaking indicator
+                if let speaker = viewModel.speakingMember {
+                    HStack(spacing: 8) {
+                        Image(systemName: "waveform")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(.black)
+                            .symbolEffect(.variableColor.iterative, isActive: true)
+                        Text("\(speaker.displayName) parle...")
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundStyle(.black)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(.white.opacity(0.4))
+                    .clipShape(.capsule)
+                    .transition(.scale.combined(with: .opacity))
+                    .padding(.bottom, 8)
+                }
 
                 // Speaker grille + messages area
                 ZStack {
@@ -92,9 +111,17 @@ struct FrequencyDetailView: View {
         .onAppear { viewModel.startPolling() }
         .onDisappear { viewModel.stopPolling() }
         .sheet(isPresented: $showMembers) {
-            MembersSheet(members: viewModel.members, frequencyName: viewModel.frequency.name)
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
+            MembersSheet(
+                members: viewModel.members,
+                frequencyName: viewModel.frequency.name,
+                currentUserID: viewModel.userID,
+                isCurrentUserCreator: viewModel.isCreator,
+                onKick: { member in
+                    Task { await viewModel.kickMember(member) }
+                }
+            )
+            .presentationDetents([.medium])
+            .presentationDragIndicator(.visible)
         }
         .alert("Quitter la fréquence ?", isPresented: $showLeaveConfirm) {
             Button("Annuler", role: .cancel) {}
@@ -206,7 +233,16 @@ struct FrequencyDetailView: View {
     }
 
     private var pttArea: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 14) {
+            // Quick reactions
+            QuickReactionBar(
+                onReaction: { reaction in
+                    viewModel.sendReaction(reaction)
+                },
+                isEnabled: !viewModel.audioEngine.isRecording && !viewModel.isSending
+            )
+            .padding(.horizontal, 20)
+
             // Status text
             Group {
                 if viewModel.audioEngine.isRecording {

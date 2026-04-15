@@ -9,22 +9,31 @@ struct FrequencyMember: Identifiable, Sendable {
     let userID: String
     let joinedAt: Date
     let displayName: String
+    let speakingUntil: Date?
 
     var id: String { recordName }
     var ckRecordID: CKRecord.ID { CKRecord.ID(recordName: recordName) }
+
+    /// Member is considered speaking if timestamp is in the future
+    var isSpeaking: Bool {
+        guard let until = speakingUntil else { return false }
+        return until > Date.now
+    }
 
     init(
         recordName: String = UUID().uuidString,
         frequencyRef: CKRecord.Reference,
         userID: String,
         displayName: String,
-        joinedAt: Date = .now
+        joinedAt: Date = .now,
+        speakingUntil: Date? = nil
     ) {
         self.recordName = recordName
         self.frequencyRef = frequencyRef
         self.userID = userID
         self.displayName = displayName
         self.joinedAt = joinedAt
+        self.speakingUntil = speakingUntil
     }
 
     init?(record: CKRecord) {
@@ -40,6 +49,7 @@ struct FrequencyMember: Identifiable, Sendable {
         self.userID = userID
         self.displayName = displayName
         self.joinedAt = joinedAt
+        self.speakingUntil = record["speakingUntil"] as? Date
     }
 
     func toRecord() -> CKRecord {
@@ -48,6 +58,9 @@ struct FrequencyMember: Identifiable, Sendable {
         record["userID"] = userID
         record["displayName"] = displayName
         record["joinedAt"] = joinedAt
+        if let speakingUntil {
+            record["speakingUntil"] = speakingUntil
+        }
         return record
     }
 }

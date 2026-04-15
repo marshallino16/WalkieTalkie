@@ -30,7 +30,8 @@ final class FrequencyListViewModel {
 
     private static func loadLocal() -> [Frequency] {
         guard let data = UserDefaults.standard.data(forKey: storageKey) else { return [] }
-        return (try? JSONDecoder().decode([Frequency].self, from: data)) ?? []
+        let stored = (try? JSONDecoder().decode([Frequency].self, from: data)) ?? []
+        return stored.sorted(by: { (a: Frequency, b: Frequency) in a.createdAt > b.createdAt })
     }
 
     private func saveLocal() {
@@ -59,7 +60,10 @@ final class FrequencyListViewModel {
                         print("[CloudKit] 🗑️ Frequency \(freq.code) was deleted remotely, removing locally")
                     }
                 }
-                frequencies = remote + localOnly
+                // Sort: most recently created first (stable order across refreshes)
+                frequencies = (remote + localOnly).sorted(by: { (a: Frequency, b: Frequency) in
+                    a.createdAt > b.createdAt
+                })
                 saveLocal()
                 print("[CloudKit] ✅ Loaded \(remote.count) remote + \(localOnly.count) local frequencies")
             } catch {
@@ -94,6 +98,13 @@ final class FrequencyListViewModel {
                 for await (code, memberCount, unread) in group {
                     memberCounts[code] = memberCount
                     unreadCounts[code] = unread
+                }
+            }
+
+            // Refresh subscriptions (fire-and-forget) to apply latest notification config
+            for freq in frequencies {
+                Task.detached { [cloudKit] in
+                    try? await cloudKit.subscribeToMessages(for: freq)
                 }
             }
         }

@@ -45,8 +45,8 @@ final class FrequencyDetailViewModel {
         Task { await loadMessages() }
         Task { await loadMembers() }
 
-        // Poll every 5 seconds for new messages AND members
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+        // Poll every 2.5 seconds for members (live indicator) and messages
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 await self?.loadMessages()
                 await self?.loadMembers()
@@ -79,17 +79,74 @@ final class FrequencyDetailViewModel {
         }
     }
 
+    // MARK: - Quick Reactions
+
+    func sendReaction(_ reaction: QuickReaction) {
+        isSending = true
+        Task {
+            defer { isSending = false }
+            do {
+                let url = try audioEngine.synthesizeReaction(tones: reaction.tones)
+                _ = try await cloudKit.sendVoiceMessage(
+                    to: frequency,
+                    senderID: userID,
+                    senderName: "\(userName) \(reaction.emoji) \(reaction.rawValue)",
+                    audioURL: url,
+                    duration: 0.5
+                )
+                print("[CloudKit] ✅ Reaction sent: \(reaction.rawValue)")
+            } catch {
+                print("[CloudKit] ❌ Reaction send error: \(error)")
+            }
+        }
+    }
+
+    // MARK: - Admin
+
+    var isCreator: Bool { frequency.creatorID == userID }
+
+    func kickMember(_ member: FrequencyMember) async {
+        guard isCreator, member.userID != userID else { return }
+        do {
+            try await cloudKit.kickMember(member)
+            members.removeAll { $0.recordName == member.recordName }
+            print("[CloudKit] ✅ Kicked member: \(member.displayName)")
+        } catch {
+            print("[CloudKit] ❌ Kick error: \(error)")
+        }
+    }
+
+    /// The currently speaking member (if any, other than self)
+    var speakingMember: FrequencyMember? {
+        members.first { $0.isSpeaking && $0.userID != userID }
+    }
+
     // MARK: - Recording
 
     func startRecording() async -> Bool {
         do {
-            return try await audioEngine.startRecording()
+            let started = try await audioEngine.startRecording()
+            if started {
+                // Signal live speaking indicator (30s window, cleared on stop)
+                Task.detached { [cloudKit, frequency, userID] in
+                    try? await cloudKit.setSpeaking(frequency, userID: userID, until: Date.now.addingTimeInterval(30))
+                }
+            }
+            return started
         } catch {
             return false
         }
     }
 
     func stopRecordingAndSend() async {
+        // Clear speaking indicator immediately
+        let freq = frequency
+        let uid = userID
+        let ck = cloudKit
+        Task.detached {
+            try? await ck.setSpeaking(freq, userID: uid, until: Optional<Date>.none)
+        }
+
         guard let audioURL = audioEngine.stopRecording() else { return }
 
         isSending = true
