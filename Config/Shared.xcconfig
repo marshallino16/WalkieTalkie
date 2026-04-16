@@ -6,8 +6,8 @@
 // ==========================================
 // Project Identity
 // ==========================================
-PRODUCT_NAME = FreqTalk
-PRODUCT_DISPLAY_NAME = Freq Talk
+PRODUCT_NAME = Roger
+PRODUCT_DISPLAY_NAME = Roger
 PRODUCT_BUNDLE_IDENTIFIER = com.marshalino.walkietalkie
 MARKETING_VERSION = 1.0
 CURRENT_PROJECT_VERSION = 13

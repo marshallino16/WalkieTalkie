@@ -31,7 +31,7 @@ final class CloudKitManager {
                 print("[CloudKit] ✅ Available")
             case .noAccount:
                 isAvailable = false
-                statusMessage = "Active iCloud dans Réglages pour utiliser WalkieTalkie"
+                statusMessage = "Active iCloud dans Réglages pour utiliser Roger"
                 print("[CloudKit] ❌ No iCloud account")
             case .restricted:
                 isAvailable = false

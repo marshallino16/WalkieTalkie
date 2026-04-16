@@ -64,7 +64,7 @@ struct Frequency: Identifiable, Hashable, Sendable, Codable {
 
     /// Share text with deep link
     var shareText: String {
-        "Rejoins ma fréquence \"\(name)\" sur WalkieTalkie !\n\(shareURL.absoluteString)\n\nCode : \(code)"
+        "Rejoins ma fréquence \"\(name)\" sur Roger !\n\(shareURL.absoluteString)\n\nCode : \(code)"
     }
 
     /// Generate a fake radio frequency number for display

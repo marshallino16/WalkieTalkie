@@ -373,7 +373,7 @@
 				DEVELOPMENT_TEAM = QC35MT888M;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = Config/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Freq Talk";
+				INFOPLIST_KEY_CFBundleDisplayName = Roger;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Pour enregistrer vos messages vocaux";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -400,7 +400,7 @@
 				DEVELOPMENT_TEAM = QC35MT888M;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = Config/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Freq Talk";
+				INFOPLIST_KEY_CFBundleDisplayName = Roger;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Pour enregistrer vos messages vocaux";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
