@@ -66,6 +66,9 @@ build/
 DerivedData/
 *.xcarchive
 
+# Internal docs (ASO, specs, screenshots)
+docs/
+
 # macOS
 .DS_Store
 

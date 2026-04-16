@@ -2,34 +2,34 @@ import Foundation
 import Security
 
 enum KeychainManager {
-    private static let service = "com.marshalino.walkietalkie"
+    private static let service = "com.genyus.roger.that"
     private static let userIDKey = "userID"
-    private static let displayNameKey = "displayName"
+    private static let displayNameUDKey = "wt_displayName"
 
-    // MARK: - User ID
+    // MARK: - User ID (Keychain — persists across reinstalls)
 
     static func getUserID() -> String {
-        if let existing = read(key: userIDKey) {
+        if let existing = keychainRead(key: userIDKey) {
             return existing
         }
         let newID = UUID().uuidString
-        save(key: userIDKey, value: newID)
+        keychainSave(key: userIDKey, value: newID)
         return newID
     }
 
-    // MARK: - Display Name
+    // MARK: - Display Name (UserDefaults — survives bundle ID changes)
 
     static func getDisplayName() -> String? {
-        read(key: displayNameKey)
+        UserDefaults.standard.string(forKey: displayNameUDKey)
     }
 
     static func setDisplayName(_ name: String) {
-        save(key: displayNameKey, value: name)
+        UserDefaults.standard.set(name, forKey: displayNameUDKey)
     }
 
-    // MARK: - Generic Keychain Operations
+    // MARK: - Keychain Operations
 
-    private static func save(key: String, value: String) {
+    private static func keychainSave(key: String, value: String) {
         let data = Data(value.utf8)
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -44,7 +44,7 @@ enum KeychainManager {
         SecItemAdd(addQuery as CFDictionary, nil)
     }
 
-    private static func read(key: String) -> String? {
+    private static func keychainRead(key: String) -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,

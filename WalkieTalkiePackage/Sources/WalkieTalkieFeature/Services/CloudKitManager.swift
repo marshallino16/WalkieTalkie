@@ -217,14 +217,13 @@ final class CloudKitManager {
         )
 
         let info = CKSubscription.NotificationInfo()
-        // User-visible notification on lock screen (even if app is killed)
+        // Single user-visible notification: title = channel name, body = "[sender] a parlé"
         info.title = frequency.name
-        info.alertBody = "Nouveau vocal"
+        info.alertLocalizationKey = "VOICE_MESSAGE_BODY"
+        info.alertLocalizationArgs = ["senderName"]
         info.soundName = "default"
         info.shouldBadge = true
-        // Also wake app to update badge/local state
         info.shouldSendContentAvailable = true
-        info.desiredKeys = ["senderName"]
         subscription.notificationInfo = info
 
         _ = try await publicDB.save(subscription)
