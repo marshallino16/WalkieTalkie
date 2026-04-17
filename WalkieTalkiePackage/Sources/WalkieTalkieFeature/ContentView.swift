@@ -63,6 +63,7 @@ public struct ContentView: View {
                         userID: userID,
                         userName: displayName
                     ),
+                    appearance: listViewModel.appearances[frequency.code] ?? .default,
                     onLeave: {
                         listViewModel.leaveFrequency(frequency)
                         navigationPath.removeLast()

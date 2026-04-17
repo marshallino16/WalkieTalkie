@@ -4,18 +4,26 @@ struct FrequencyRow: View {
     let frequency: Frequency
     let memberCount: Int
     let unreadCount: Int
+    let appearance: FrequencyAppearance
 
     var body: some View {
         HStack(spacing: 14) {
-            // Radio icon with signal
+            // Custom icon
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(WTTheme.yellow)
+                    .fill(appearance.color)
                     .frame(width: 48, height: 48)
 
-                Image(systemName: "antenna.radiowaves.left.and.right")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(.black)
+                if appearance.iconName == "default" {
+                    Image(systemName: "antenna.radiowaves.left.and.right")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(.black)
+                } else {
+                    Image(appearance.iconName, bundle: .main)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 34, height: 34)
+                }
 
                 // Unread badge
                 if unreadCount > 0 {
@@ -34,11 +42,9 @@ struct FrequencyRow: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    Text(frequency.name)
-                        .font(WTTheme.bodyFont)
-                        .foregroundStyle(.white)
-                }
+                Text(frequency.name)
+                    .font(WTTheme.bodyFont)
+                    .foregroundStyle(.white)
 
                 HStack(spacing: 4) {
                     Image(systemName: "person.2.fill")

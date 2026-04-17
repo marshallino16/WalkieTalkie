@@ -23,7 +23,7 @@ struct JoinFrequencySheet: View {
                 Capsule()
                     .fill(WTTheme.mediumGray)
                     .frame(width: 36, height: 4)
-                    .padding(.top, 12)
+                    .padding(.top, 8)
 
                 Text(L10n.string("join.title"))
                     .font(.system(size: 20, weight: .black, design: .rounded))

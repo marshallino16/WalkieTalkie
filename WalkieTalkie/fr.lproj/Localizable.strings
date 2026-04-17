@@ -75,5 +75,11 @@
 "error.joinFailed" = "Erreur : %@";
 "error.icloudNotAvailable" = "iCloud non disponible";
 
+/* Appearance */
+"appearance.customize" = "Personnaliser l'icône";
+"appearance.color" = "COULEUR DE FOND";
+"appearance.icon" = "ICÔNE";
+"appearance.save" = "ENREGISTRER";
+
 /* Share */
 "share.message" = "Rejoins ma fréquence \"%@\" sur Roger !\n%@\n\nCode : %@";

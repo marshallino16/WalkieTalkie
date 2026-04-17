@@ -3,6 +3,7 @@ import SwiftUI
 struct FrequencyListView: View {
     @Bindable var viewModel: FrequencyListViewModel
     let onSelect: (Frequency) -> Void
+    @State private var customizingFrequency: Frequency?
 
     var body: some View {
         ZStack {
@@ -44,10 +45,18 @@ struct FrequencyListView: View {
                                     FrequencyRow(
                                         frequency: frequency,
                                         memberCount: viewModel.memberCounts[frequency.code] ?? 0,
-                                        unreadCount: viewModel.unreadCounts[frequency.code] ?? 0
+                                        unreadCount: viewModel.unreadCounts[frequency.code] ?? 0,
+                                        appearance: viewModel.appearances[frequency.code] ?? .default
                                     )
                                 }
                                 .buttonStyle(.plain)
+                                .contextMenu {
+                                    Button {
+                                        customizingFrequency = frequency
+                                    } label: {
+                                        Label(L10n.string("appearance.customize"), systemImage: "paintbrush.fill")
+                                    }
+                                }
                             }
                         }
                         .padding(.horizontal, 16)
@@ -67,7 +76,7 @@ struct FrequencyListView: View {
                     }
                 }
             }
-            .presentationDetents([.medium])
+            .presentationDetents([.height(580)])
             .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $viewModel.showJoinSheet) {
@@ -79,7 +88,18 @@ struct FrequencyListView: View {
                     }
                 }
             }
-            .presentationDetents([.medium])
+            .presentationDetents([.height(480)])
+            .presentationDragIndicator(.visible)
+        }
+        .sheet(item: $customizingFrequency) { freq in
+            AppearancePickerSheet(
+                frequencyCode: freq.code,
+                current: viewModel.appearances[freq.code] ?? .default,
+                onSave: { appearance in
+                    viewModel.updateAppearance(appearance, for: freq.code)
+                }
+            )
+            .presentationDetents([.large])
             .presentationDragIndicator(.visible)
         }
         .task {

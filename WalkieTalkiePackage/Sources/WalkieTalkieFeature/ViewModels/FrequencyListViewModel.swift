@@ -8,6 +8,7 @@ final class FrequencyListViewModel {
     private(set) var frequencies: [Frequency] = []
     private(set) var memberCounts: [String: Int] = [:] // code → count
     private(set) var unreadCounts: [String: Int] = [:] // code → unread
+    var appearances: [String: FrequencyAppearance] = [:] // code → appearance
     private(set) var isLoading = false
     private(set) var error: String?
 
@@ -22,8 +23,19 @@ final class FrequencyListViewModel {
     init(cloudKit: CloudKitManager, userID: String) {
         self.cloudKit = cloudKit
         self.userID = userID
-        // Load locally saved frequencies immediately
         frequencies = Self.loadLocal()
+        loadAppearances()
+    }
+
+    func loadAppearances() {
+        for freq in frequencies {
+            appearances[freq.code] = FrequencyAppearance.load(for: freq.code)
+        }
+    }
+
+    func updateAppearance(_ appearance: FrequencyAppearance, for code: String) {
+        FrequencyAppearance.save(appearance, for: code)
+        appearances[code] = appearance
     }
 
     // MARK: - Local Persistence

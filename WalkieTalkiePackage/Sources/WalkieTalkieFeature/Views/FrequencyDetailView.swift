@@ -2,6 +2,7 @@ import SwiftUI
 
 struct FrequencyDetailView: View {
     @Bindable var viewModel: FrequencyDetailViewModel
+    var appearance: FrequencyAppearance = .default
     var onLeave: (() -> Void)?
     var onDelete: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
@@ -14,8 +15,8 @@ struct FrequencyDetailView: View {
 
     var body: some View {
         ZStack {
-            // Full yellow background like the reference image
-            WTTheme.yellow.ignoresSafeArea()
+            // Background color from frequency appearance
+            appearance.color.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Top bar
