@@ -57,7 +57,7 @@ final class FrequencyListViewModel {
                     if let _ = try? await cloudKit.findFrequency(byCode: freq.code) {
                         localOnly.append(freq)
                     } else {
-                        print("[CloudKit] 🗑️ Frequency \(freq.code) was deleted remotely, removing locally")
+                        Log.cloudkit.info("Frequency \(freq.code, privacy: .public) was deleted remotely, removing locally")
                     }
                 }
                 // Sort: most recently created first (stable order across refreshes)
@@ -65,15 +65,15 @@ final class FrequencyListViewModel {
                     a.createdAt > b.createdAt
                 })
                 saveLocal()
-                print("[CloudKit] ✅ Loaded \(remote.count) remote + \(localOnly.count) local frequencies")
+                Log.cloudkit.info("Loaded \(remote.count, privacy: .public) remote + \(localOnly.count, privacy: .public) local frequencies")
             } catch {
                 // NOT_FOUND is expected when record types don't exist yet (first use)
                 let ckError = error as? CKError
                 if ckError?.code == .unknownItem {
-                    print("[CloudKit] ℹ️ No record types yet (first use), using local data only")
+                    Log.cloudkit.info("No record types yet (first use), using local data only")
                 } else {
-                    print("[CloudKit] ❌ Load frequencies error: \(error)")
-                    self.error = "Impossible de charger les fréquences"
+                    Log.cloudkit.error("Load frequencies error: \(error, privacy: .public)")
+                    self.error = L10n.string("error.loadFailed")
                 }
             }
 
@@ -129,15 +129,16 @@ final class FrequencyListViewModel {
             do {
                 let record = frequency.toRecord()
                 _ = try await cloudKit.publicDB.save(record)
-                print("[CloudKit] ✅ Frequency saved: \(code)")
+                Log.cloudkit.info("Frequency saved: \(code, privacy: .public)")
                 try await cloudKit.joinFrequency(frequency, userID: userID, displayName: displayName)
-                print("[CloudKit] ✅ Member joined: \(displayName)")
+                Log.cloudkit.info("Member joined: \(displayName, privacy: .public)")
                 try? await cloudKit.subscribeToMessages(for: frequency)
             } catch {
-                print("[CloudKit] ❌ Create frequency error: \(error)")
+                Log.cloudkit.error("Create frequency error: \(error, privacy: .public)")
             }
         } else {
-            print("[CloudKit] ⚠️ Not available. Status: \(cloudKit.statusMessage ?? "unknown")")
+            let status = self.cloudKit.statusMessage ?? "unknown"
+            Log.cloudkit.warning("Not available. Status: \(status, privacy: .public)")
         }
 
         frequencies.insert(frequency, at: 0)
@@ -150,27 +151,27 @@ final class FrequencyListViewModel {
 
     func joinFrequency(code: String, displayName: String) async -> Frequency? {
         guard cloudKit.isAvailable else {
-            self.error = "iCloud non disponible"
+            self.error = L10n.string("error.icloudNotAvailable")
             return nil
         }
 
         do {
             guard let frequency = try await cloudKit.findFrequency(byCode: code) else {
-                self.error = "Fréquence introuvable pour le code \(code.uppercased())"
+                self.error = L10n.string("error.frequencyNotFound", code.uppercased())
                 return nil
             }
             try await cloudKit.joinFrequency(frequency, userID: userID, displayName: displayName)
-            print("[CloudKit] ✅ Joined frequency: \(frequency.name)")
+            Log.cloudkit.info("Joined frequency: \(frequency.name, privacy: .public)")
             try? await cloudKit.subscribeToMessages(for: frequency)
             frequencies.insert(frequency, at: 0)
             saveLocal()
             return frequency
         } catch let error as CKError where error.code == .unknownItem {
-            self.error = "Index CloudKit manquant. Ajoute un index Queryable sur le champ 'code' du record type 'Frequency' dans le CloudKit Dashboard."
+            self.error = L10n.string("error.indexMissing")
             return nil
         } catch {
-            self.error = "Erreur: \(error.localizedDescription)"
-            print("[CloudKit] ❌ Join error: \(error)")
+            self.error = L10n.string("error.joinFailed", error.localizedDescription)
+            Log.cloudkit.error("Join error: \(error, privacy: .public)")
             return nil
         }
     }
@@ -186,7 +187,7 @@ final class FrequencyListViewModel {
             Task {
                 try? await cloudKit.leaveFrequency(frequency, userID: userID)
                 try? await cloudKit.unsubscribeFromMessages(for: frequency)
-                print("[CloudKit] ✅ Left frequency: \(frequency.code)")
+                Log.cloudkit.info("Left frequency: \(frequency.code, privacy: .public)")
             }
         }
     }
@@ -201,7 +202,7 @@ final class FrequencyListViewModel {
         if cloudKit.isAvailable {
             Task {
                 try? await cloudKit.deleteFrequency(frequency)
-                print("[CloudKit] ✅ Deleted frequency: \(frequency.code)")
+                Log.cloudkit.info("Deleted frequency: \(frequency.code, privacy: .public)")
             }
         }
     }

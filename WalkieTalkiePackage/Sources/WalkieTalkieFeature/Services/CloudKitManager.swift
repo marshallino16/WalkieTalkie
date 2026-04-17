@@ -23,27 +23,27 @@ final class CloudKitManager {
     func checkAvailability() async {
         do {
             let status = try await container.accountStatus()
-            print("[CloudKit] Account status: \(status.rawValue) for container: \(Self.containerID)")
+            Log.cloudkit.info("Account status: \(status.rawValue, privacy: .public) for container: \(Self.containerID, privacy: .public)")
             switch status {
             case .available:
                 isAvailable = true
                 statusMessage = nil
-                print("[CloudKit] ✅ Available")
+                Log.cloudkit.info("Available")
             case .noAccount:
                 isAvailable = false
-                statusMessage = "Active iCloud dans Réglages pour utiliser Roger"
-                print("[CloudKit] ❌ No iCloud account")
+                statusMessage = L10n.string("error.icloudRequired")
+                Log.cloudkit.error("No iCloud account")
             case .restricted:
                 isAvailable = false
-                statusMessage = "iCloud est restreint sur cet appareil"
+                statusMessage = L10n.string("error.icloudRestricted")
             default:
                 isAvailable = false
-                statusMessage = "iCloud temporairement indisponible (status: \(status.rawValue))"
+                statusMessage = L10n.string("error.icloudUnavailable")
             }
         } catch {
             isAvailable = false
-            statusMessage = "Erreur iCloud: \(error.localizedDescription)"
-            print("[CloudKit] ❌ Error checking availability: \(error)")
+            statusMessage = L10n.string("error.icloudError", error.localizedDescription)
+            Log.cloudkit.error("Error checking availability: \(error, privacy: .public)")
         }
     }
 
@@ -62,20 +62,20 @@ final class CloudKitManager {
 
     func findFrequency(byCode code: String) async throws -> Frequency? {
         let searchCode = code.uppercased()
-        print("[CloudKit] 🔍 Searching for frequency with code: \(searchCode)")
+        Log.cloudkit.debug("Searching for frequency with code: \(searchCode, privacy: .public)")
         let predicate = NSPredicate(format: "code == %@", searchCode)
         let query = CKQuery(recordType: Frequency.recordType, predicate: predicate)
         do {
             let (results, _) = try await publicDB.records(matching: query, resultsLimit: 1)
             let record = try results.first?.1.get()
             if let freq = record.flatMap(Frequency.init(record:)) {
-                print("[CloudKit] ✅ Found frequency: \(freq.name)")
+                Log.cloudkit.info("Found frequency: \(freq.name, privacy: .public)")
                 return freq
             }
-            print("[CloudKit] ⚠️ No frequency found for code: \(searchCode)")
+            Log.cloudkit.warning("No frequency found for code: \(searchCode, privacy: .public)")
             return nil
         } catch {
-            print("[CloudKit] ❌ Find frequency error: \(error)")
+            Log.cloudkit.error("Find frequency error: \(error, privacy: .public)")
             throw error
         }
     }
@@ -244,7 +244,7 @@ final class CloudKitManager {
         let memberQuery = CKQuery(recordType: FrequencyMember.recordType, predicate: memberPred)
         let (memberResults, _) = try await publicDB.records(matching: memberQuery)
         for (recordID, _) in memberResults {
-            try? await publicDB.deleteRecord(withID: recordID)
+            _ = try? await publicDB.deleteRecord(withID: recordID)
         }
 
         // Delete all voice messages
@@ -252,7 +252,7 @@ final class CloudKitManager {
         let msgQuery = CKQuery(recordType: VoiceMessage.recordType, predicate: msgPred)
         let (msgResults, _) = try await publicDB.records(matching: msgQuery)
         for (recordID, _) in msgResults {
-            try? await publicDB.deleteRecord(withID: recordID)
+            _ = try? await publicDB.deleteRecord(withID: recordID)
         }
 
         // Delete subscription

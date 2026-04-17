@@ -55,7 +55,7 @@ struct FrequencyDetailView: View {
                             .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(.black)
                             .symbolEffect(.variableColor.iterative, isActive: true)
-                        Text("\(speaker.displayName) parle...")
+                        Text(L10n.string("channel.speaking", speaker.displayName))
                             .font(.system(size: 13, weight: .bold, design: .rounded))
                             .foregroundStyle(.black)
                     }
@@ -123,21 +123,21 @@ struct FrequencyDetailView: View {
             .presentationDetents([.medium])
             .presentationDragIndicator(.visible)
         }
-        .alert("Quitter la fréquence ?", isPresented: $showLeaveConfirm) {
-            Button("Annuler", role: .cancel) {}
-            Button("Quitter", role: .destructive) {
+        .alert(L10n.string("channel.leave.title"), isPresented: $showLeaveConfirm) {
+            Button(L10n.string("channel.cancel"), role: .cancel) {}
+            Button(L10n.string("channel.leave.button"), role: .destructive) {
                 onLeave?()
             }
         } message: {
-            Text("Tu ne recevras plus les messages de \"\(viewModel.frequency.name)\"")
+            Text(L10n.string("channel.leave.message", viewModel.frequency.name))
         }
-        .alert("Supprimer la fréquence ?", isPresented: $showDeleteConfirm) {
-            Button("Annuler", role: .cancel) {}
-            Button("Supprimer", role: .destructive) {
+        .alert(L10n.string("channel.delete.title"), isPresented: $showDeleteConfirm) {
+            Button(L10n.string("channel.cancel"), role: .cancel) {}
+            Button(L10n.string("channel.delete.button"), role: .destructive) {
                 onDelete?()
             }
         } message: {
-            Text("La fréquence \"\(viewModel.frequency.name)\" sera supprimée pour tous les membres")
+            Text(L10n.string("channel.delete.message", viewModel.frequency.name))
         }
     }
 
@@ -159,7 +159,7 @@ struct FrequencyDetailView: View {
             Spacer()
 
             VStack(spacing: 2) {
-                Text("WALKIE TALKIE")
+                Text(L10n.string("channel.header"))
                     .font(.system(size: 11, weight: .black, design: .rounded))
                     .foregroundStyle(WTTheme.black.opacity(0.6))
                     .tracking(2)
@@ -212,7 +212,7 @@ struct FrequencyDetailView: View {
             } label: {
                 controlButton(
                     icon: codeCopied ? "checkmark" : "doc.on.clipboard",
-                    label: codeCopied ? "Copié !" : viewModel.frequency.code
+                    label: codeCopied ? L10n.string("channel.copied") : viewModel.frequency.code
                 )
             }
         }
@@ -246,13 +246,13 @@ struct FrequencyDetailView: View {
             // Status text
             Group {
                 if viewModel.audioEngine.isRecording {
-                    Text("ENREGISTREMENT...")
+                    Text(L10n.string("channel.ptt.recording"))
                         .foregroundStyle(WTTheme.black)
                 } else if viewModel.isSending {
-                    Text("ENVOI...")
+                    Text(L10n.string("channel.ptt.sending"))
                         .foregroundStyle(WTTheme.black.opacity(0.6))
                 } else {
-                    Text("MAINTENIR POUR PARLER")
+                    Text(L10n.string("channel.ptt.idle"))
                         .foregroundStyle(WTTheme.black.opacity(0.6))
                 }
             }

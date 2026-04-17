@@ -25,19 +25,19 @@ struct JoinFrequencySheet: View {
                     .frame(width: 36, height: 4)
                     .padding(.top, 12)
 
-                Text("REJOINDRE")
+                Text(L10n.string("join.title"))
                     .font(.system(size: 20, weight: .black, design: .rounded))
                     .foregroundStyle(WTTheme.yellow)
                     .tracking(2)
 
                 // Code field
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("CODE DE FRÉQUENCE")
+                    Text(L10n.string("join.codeLabel"))
                         .font(WTTheme.captionFont)
                         .foregroundStyle(WTTheme.lightGray)
                         .tracking(1.5)
 
-                    TextField("", text: $code, prompt: Text("XKCD-4782").foregroundStyle(WTTheme.mediumGray))
+                    TextField("", text: $code, prompt: Text(L10n.string("join.codePlaceholder")).foregroundStyle(WTTheme.mediumGray))
                         .font(.system(size: 24, weight: .bold, design: .monospaced))
                         .foregroundStyle(WTTheme.yellow)
                         .textInputAutocapitalization(.characters)
@@ -71,12 +71,12 @@ struct JoinFrequencySheet: View {
 
                 // Display name field
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("TON PSEUDO SUR CETTE FRÉQUENCE")
+                    Text(L10n.string("join.pseudoLabel"))
                         .font(WTTheme.captionFont)
                         .foregroundStyle(WTTheme.lightGray)
                         .tracking(1.5)
 
-                    TextField("", text: $displayName, prompt: Text("Ton pseudo...").foregroundStyle(WTTheme.mediumGray))
+                    TextField("", text: $displayName, prompt: Text(L10n.string("join.pseudoPlaceholder")).foregroundStyle(WTTheme.mediumGray))
                         .font(WTTheme.bodyFont)
                         .foregroundStyle(.white)
                         .textInputAutocapitalization(.words)
@@ -122,7 +122,7 @@ struct JoinFrequencySheet: View {
                         ProgressView()
                             .tint(.black)
                     } else {
-                        Text("REJOINDRE LA FRÉQUENCE")
+                        Text(L10n.string("join.button"))
                             .font(.system(size: 16, weight: .black, design: .rounded))
                             .tracking(1)
                     }

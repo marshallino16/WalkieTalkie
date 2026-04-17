@@ -22,8 +22,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		8B41F6452DEDD0D5001A66F9 /* FreqTalk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FreqTalk.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		8B41F65C2DEDD0D6001A66F9 /* FreqTalk.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FreqTalk.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8B41F6452DEDD0D5001A66F9 /* Roger.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Roger.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8B41F65C2DEDD0D6001A66F9 /* Roger.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Roger.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -95,8 +95,8 @@
 		8B41F6462DEDD0D5001A66F9 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8B41F6452DEDD0D5001A66F9 /* FreqTalk.app */,
-				8B41F65C2DEDD0D6001A66F9 /* FreqTalk.xctest */,
+				8B41F6452DEDD0D5001A66F9 /* Roger.app */,
+				8B41F65C2DEDD0D6001A66F9 /* Roger.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -132,7 +132,7 @@
 				8B41F6842DEDD25C001A66F9 /* WalkieTalkieFeature */,
 			);
 			productName = WalkieTalkie;
-			productReference = 8B41F6452DEDD0D5001A66F9 /* FreqTalk.app */;
+			productReference = 8B41F6452DEDD0D5001A66F9 /* Roger.app */;
 			productType = "com.apple.product-type.application";
 		};
 		8B41F65B2DEDD0D6001A66F9 /* WalkieTalkieUITests */ = {
@@ -156,7 +156,7 @@
 				8B41F6822DEDD23B001A66F9 /* WalkieTalkieFeature */,
 			);
 			productName = WalkieTalkieUITests;
-			productReference = 8B41F65C2DEDD0D6001A66F9 /* FreqTalk.xctest */;
+			productReference = 8B41F65C2DEDD0D6001A66F9 /* Roger.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -184,6 +184,7 @@
 			knownRegions = (
 				en,
 				Base,
+				fr,
 			);
 			mainGroup = 8B41F63C2DEDD0D5001A66F9;
 			minimizedProjectReferenceProxies = 1;

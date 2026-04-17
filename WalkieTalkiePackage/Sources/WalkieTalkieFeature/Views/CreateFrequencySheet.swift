@@ -25,19 +25,19 @@ struct CreateFrequencySheet: View {
                     .frame(width: 36, height: 4)
                     .padding(.top, 12)
 
-                Text("NOUVELLE FRÉQUENCE")
+                Text(L10n.string("create.title"))
                     .font(.system(size: 20, weight: .black, design: .rounded))
                     .foregroundStyle(WTTheme.yellow)
                     .tracking(2)
 
                 // Name field
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("NOM DE LA FRÉQUENCE")
+                    Text(L10n.string("create.nameLabel"))
                         .font(WTTheme.captionFont)
                         .foregroundStyle(WTTheme.lightGray)
                         .tracking(1.5)
 
-                    TextField("", text: $name, prompt: Text("Les potes, Bureau...").foregroundStyle(WTTheme.mediumGray))
+                    TextField("", text: $name, prompt: Text(L10n.string("create.namePlaceholder")).foregroundStyle(WTTheme.mediumGray))
                         .font(WTTheme.bodyFont)
                         .foregroundStyle(.white)
                         .padding()
@@ -55,12 +55,12 @@ struct CreateFrequencySheet: View {
 
                 // Display name field
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("TON PSEUDO SUR CETTE FRÉQUENCE")
+                    Text(L10n.string("create.pseudoLabel"))
                         .font(WTTheme.captionFont)
                         .foregroundStyle(WTTheme.lightGray)
                         .tracking(1.5)
 
-                    TextField("", text: $displayName, prompt: Text("Ton pseudo...").foregroundStyle(WTTheme.mediumGray))
+                    TextField("", text: $displayName, prompt: Text(L10n.string("create.pseudoPlaceholder")).foregroundStyle(WTTheme.mediumGray))
                         .font(WTTheme.bodyFont)
                         .foregroundStyle(.white)
                         .textInputAutocapitalization(.words)
@@ -79,7 +79,7 @@ struct CreateFrequencySheet: View {
 
                 // Generated code display
                 VStack(spacing: 8) {
-                    Text("CODE DE LA FRÉQUENCE")
+                    Text(L10n.string("create.codeLabel"))
                         .font(WTTheme.captionFont)
                         .foregroundStyle(WTTheme.lightGray)
                         .tracking(1.5)
@@ -117,7 +117,7 @@ struct CreateFrequencySheet: View {
                     guard !trimmedName.isEmpty, !trimmedDisplay.isEmpty else { return }
                     onCreate(trimmedName, generatedCode, trimmedDisplay)
                 } label: {
-                    Text("CRÉER LA FRÉQUENCE")
+                    Text(L10n.string("create.button"))
                         .font(.system(size: 16, weight: .black, design: .rounded))
                         .tracking(1)
                 }

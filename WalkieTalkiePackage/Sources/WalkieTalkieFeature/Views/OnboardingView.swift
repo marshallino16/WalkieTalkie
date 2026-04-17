@@ -32,19 +32,19 @@ struct OnboardingView: View {
                     .padding(.bottom, 40)
 
                 // Subtitle
-                Text("Messages vocaux éphémères")
+                Text(L10n.string("onboarding.subtitle"))
                     .font(WTTheme.bodyFont)
                     .foregroundStyle(WTTheme.lightGray)
                     .padding(.bottom, 48)
 
                 // Pseudo input
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("CHOISIS TON PSEUDO")
+                    Text(L10n.string("onboarding.choosePseudo"))
                         .font(WTTheme.captionFont)
                         .foregroundStyle(WTTheme.lightGray)
                         .tracking(2)
 
-                    TextField("", text: $pseudo, prompt: Text("Ex: Captain Roger").foregroundStyle(WTTheme.mediumGray))
+                    TextField("", text: $pseudo, prompt: Text(L10n.string("onboarding.pseudoPlaceholder")).foregroundStyle(WTTheme.mediumGray))
                         .font(WTTheme.headlineFont)
                         .foregroundStyle(.white)
                         .padding()
@@ -69,7 +69,7 @@ struct OnboardingView: View {
 
                 // Continue button
                 Button(action: submit) {
-                    Text("C'EST PARTI")
+                    Text(L10n.string("onboarding.go"))
                         .font(.system(size: 18, weight: .black, design: .rounded))
                         .tracking(1)
                 }

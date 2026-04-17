@@ -6,7 +6,7 @@ struct RadioFrequencyDisplay: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Text("FREQUENCY CHANNEL")
+            Text(L10n.string("channel.frequencyChannel"))
                 .font(WTTheme.captionFont)
                 .foregroundStyle(WTTheme.black.opacity(0.6))
                 .tracking(2)

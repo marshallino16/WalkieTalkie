@@ -59,7 +59,7 @@ final class AudioEngineManager {
         self.recordingStart = Date.now
         self.recordingState = .recording(progress: 0)
 
-        print("[Audio] ✅ Recording started (AVAudioRecorder)")
+        Log.audio.info("Recording started (AVAudioRecorder)")
 
         progressTask = Task { [weak self] in
             while !Task.isCancelled {
@@ -102,7 +102,7 @@ final class AudioEngineManager {
         self.recorder = nil
         self.audioLevel = 0
 
-        print("[Audio] ✅ Recording stopped, duration: \(String(format: "%.1f", duration))s")
+        Log.audio.info("Recording stopped, duration: \(String(format: "%.1f", duration))s")
 
         recordingURL = nil
         recordingStart = nil
@@ -206,7 +206,7 @@ final class AudioEngineManager {
                     // Retry
                     continue
                 case .error:
-                    print("[Audio] ❌ renderOffline error")
+                    Log.audio.error("renderOffline error")
                     engine.stop()
                     return nil
                 @unknown default:
@@ -216,11 +216,11 @@ final class AudioEngineManager {
             }
 
             engine.stop()
-            print("[Audio] ✅ Applied radio effect → \(outputURL.lastPathComponent)")
+            Log.audio.info("Applied radio effect -> \(outputURL.lastPathComponent, privacy: .public)")
             return outputURL
 
         } catch {
-            print("[Audio] ❌ applyRadioEffect failed: \(error)")
+            Log.audio.error("applyRadioEffect failed: \(error, privacy: .public)")
             return nil
         }
     }

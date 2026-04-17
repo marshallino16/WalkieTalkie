@@ -1,1 +1,79 @@
-"VOICE_MESSAGE_BODY" = "%@ a parlé";
+/* Push notification */
+"VOICE_MESSAGE_BODY" = "%@ sent a vocal";
+
+/* Onboarding */
+"onboarding.subtitle" = "Ephemeral voice messages";
+"onboarding.choosePseudo" = "CHOOSE YOUR NICKNAME";
+"onboarding.pseudoPlaceholder" = "Ex: Captain Roger";
+"onboarding.go" = "LET'S GO";
+
+/* Frequency List */
+"list.title" = "ROGER";
+"list.subtitle" = "My frequencies";
+"list.empty.title" = "No frequency";
+"list.empty.subtitle" = "Create a frequency or join one\nwith a shared code";
+"list.create" = "Create";
+"list.join" = "Join";
+
+/* Create Sheet */
+"create.title" = "NEW FREQUENCY";
+"create.nameLabel" = "FREQUENCY NAME";
+"create.namePlaceholder" = "Friends, Office...";
+"create.pseudoLabel" = "YOUR NICKNAME ON THIS FREQUENCY";
+"create.pseudoPlaceholder" = "Your nickname...";
+"create.codeLabel" = "FREQUENCY CODE";
+"create.shareHint" = "Share this code to invite people";
+"create.button" = "CREATE FREQUENCY";
+
+/* Join Sheet */
+"join.title" = "JOIN";
+"join.codeLabel" = "FREQUENCY CODE";
+"join.codePlaceholder" = "XKCD-4782";
+"join.pseudoLabel" = "YOUR NICKNAME ON THIS FREQUENCY";
+"join.pseudoPlaceholder" = "Your nickname...";
+"join.button" = "JOIN FREQUENCY";
+
+/* Channel Detail */
+"channel.header" = "ROGER";
+"channel.frequencyChannel" = "FREQUENCY CHANNEL";
+"channel.ptt.idle" = "HOLD TO TALK";
+"channel.ptt.recording" = "RECORDING...";
+"channel.ptt.sending" = "SENDING...";
+"channel.ptt.push" = "PUSH";
+"channel.leave.title" = "Leave frequency?";
+"channel.leave.message" = "You will no longer receive messages from \"%@\"";
+"channel.leave.button" = "Leave";
+"channel.delete.title" = "Delete frequency?";
+"channel.delete.message" = "The frequency \"%@\" will be deleted for all members";
+"channel.delete.button" = "Delete";
+"channel.cancel" = "Cancel";
+"channel.copied" = "Copied!";
+"channel.speaking" = "%@ is talking...";
+
+/* Members Sheet */
+"members.title" = "MEMBERS";
+"members.empty" = "No members yet";
+"members.you" = "(you)";
+"members.speaking" = "Speaking...";
+"members.joined" = "Joined %@";
+"members.kick.title" = "Remove this member?";
+"members.kick.message" = "%@ will no longer be able to see or post on this frequency";
+"members.kick.button" = "Remove";
+
+/* Voice Message */
+"voice.duration" = "%ds";
+"voice.countdown" = "%d:%02d";
+
+/* Errors */
+"error.icloudRequired" = "Enable iCloud in Settings to use Roger";
+"error.icloudRestricted" = "iCloud is restricted on this device";
+"error.icloudUnavailable" = "iCloud temporarily unavailable";
+"error.icloudError" = "iCloud error: %@";
+"error.loadFailed" = "Unable to load frequencies";
+"error.frequencyNotFound" = "Frequency not found for code %@";
+"error.indexMissing" = "CloudKit index missing. Add a Queryable index on the 'code' field of the 'Frequency' record type in the CloudKit Dashboard.";
+"error.joinFailed" = "Error: %@";
+"error.icloudNotAvailable" = "iCloud not available";
+
+/* Share */
+"share.message" = "Join my frequency \"%@\" on Roger!\n%@\n\nCode: %@";

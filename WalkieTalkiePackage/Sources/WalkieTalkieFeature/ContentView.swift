@@ -124,7 +124,7 @@ public struct ContentView: View {
             if settings.authorizationStatus == .notDetermined {
                 let granted = (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
                 if granted {
-                    await UIApplication.shared.registerForRemoteNotifications()
+                    UIApplication.shared.registerForRemoteNotifications()
                 }
             }
         }

@@ -94,9 +94,9 @@ final class FrequencyDetailViewModel {
                     audioURL: url,
                     duration: 0.5
                 )
-                print("[CloudKit] ✅ Reaction sent: \(reaction.rawValue)")
+                Log.cloudkit.info("Reaction sent: \(reaction.rawValue, privacy: .public)")
             } catch {
-                print("[CloudKit] ❌ Reaction send error: \(error)")
+                Log.cloudkit.error("Reaction send error: \(error, privacy: .public)")
             }
         }
     }
@@ -110,9 +110,9 @@ final class FrequencyDetailViewModel {
         do {
             try await cloudKit.kickMember(member)
             members.removeAll { $0.recordName == member.recordName }
-            print("[CloudKit] ✅ Kicked member: \(member.displayName)")
+            Log.cloudkit.info("Kicked member: \(member.displayName, privacy: .public)")
         } catch {
-            print("[CloudKit] ❌ Kick error: \(error)")
+            Log.cloudkit.error("Kick error: \(error, privacy: .public)")
         }
     }
 
@@ -159,9 +159,9 @@ final class FrequencyDetailViewModel {
                 audioURL: audioURL,
                 duration: duration
             )
-            print("[CloudKit] ✅ Voice message sent: \(msg.id), duration: \(duration)s")
+            Log.cloudkit.info("Voice message sent: \(msg.id, privacy: .public), duration: \(duration, privacy: .public)s")
         } catch {
-            print("[CloudKit] ❌ Send voice message error: \(error)")
+            Log.cloudkit.error("Send voice message error: \(error, privacy: .public)")
         }
         isSending = false
     }

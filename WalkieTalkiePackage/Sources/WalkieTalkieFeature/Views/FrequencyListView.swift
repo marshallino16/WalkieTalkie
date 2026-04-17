@@ -92,11 +92,11 @@ struct FrequencyListView: View {
     private var headerView: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("WALKIE TALKIE")
+                Text(L10n.string("list.title"))
                     .font(.system(size: 28, weight: .black, design: .rounded))
                     .foregroundStyle(WTTheme.yellow)
 
-                Text("Mes fréquences")
+                Text(L10n.string("list.subtitle"))
                     .font(WTTheme.captionFont)
                     .foregroundStyle(WTTheme.lightGray)
                     .tracking(1)
@@ -139,11 +139,11 @@ struct FrequencyListView: View {
                 .foregroundStyle(WTTheme.yellow.opacity(0.3))
 
             VStack(spacing: 8) {
-                Text("Aucune fréquence")
+                Text(L10n.string("list.empty.title"))
                     .font(WTTheme.headlineFont)
                     .foregroundStyle(.white)
 
-                Text("Crée une fréquence ou rejoins-en une\navec un code partagé")
+                Text(L10n.string("list.empty.subtitle"))
                     .font(WTTheme.captionFont)
                     .foregroundStyle(WTTheme.lightGray)
                     .multilineTextAlignment(.center)
@@ -153,7 +153,7 @@ struct FrequencyListView: View {
                 Button {
                     viewModel.showCreateSheet = true
                 } label: {
-                    Label("Créer", systemImage: "plus")
+                    Label(L10n.string("list.create"), systemImage: "plus")
                         .font(WTTheme.bodyFont)
                 }
                 .buttonStyle(WTYellowButtonStyle())
@@ -161,7 +161,7 @@ struct FrequencyListView: View {
                 Button {
                     viewModel.showJoinSheet = true
                 } label: {
-                    Label("Rejoindre", systemImage: "magnifyingglass")
+                    Label(L10n.string("list.join"), systemImage: "magnifyingglass")
                         .font(WTTheme.bodyFont)
                 }
                 .buttonStyle(WTOutlineButtonStyle())

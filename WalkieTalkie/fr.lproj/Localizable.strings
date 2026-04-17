@@ -1,0 +1,79 @@
+/* Push notification */
+"VOICE_MESSAGE_BODY" = "%@ a parlé";
+
+/* Onboarding */
+"onboarding.subtitle" = "Messages vocaux éphémères";
+"onboarding.choosePseudo" = "CHOISIS TON PSEUDO";
+"onboarding.pseudoPlaceholder" = "Ex: Captain Roger";
+"onboarding.go" = "C'EST PARTI";
+
+/* Frequency List */
+"list.title" = "ROGER";
+"list.subtitle" = "Mes fréquences";
+"list.empty.title" = "Aucune fréquence";
+"list.empty.subtitle" = "Crée une fréquence ou rejoins-en une\navec un code partagé";
+"list.create" = "Créer";
+"list.join" = "Rejoindre";
+
+/* Create Sheet */
+"create.title" = "NOUVELLE FRÉQUENCE";
+"create.nameLabel" = "NOM DE LA FRÉQUENCE";
+"create.namePlaceholder" = "Les potes, Bureau...";
+"create.pseudoLabel" = "TON PSEUDO SUR CETTE FRÉQUENCE";
+"create.pseudoPlaceholder" = "Ton pseudo...";
+"create.codeLabel" = "CODE DE LA FRÉQUENCE";
+"create.shareHint" = "Partage ce code pour inviter des gens";
+"create.button" = "CRÉER LA FRÉQUENCE";
+
+/* Join Sheet */
+"join.title" = "REJOINDRE";
+"join.codeLabel" = "CODE DE FRÉQUENCE";
+"join.codePlaceholder" = "XKCD-4782";
+"join.pseudoLabel" = "TON PSEUDO SUR CETTE FRÉQUENCE";
+"join.pseudoPlaceholder" = "Ton pseudo...";
+"join.button" = "REJOINDRE LA FRÉQUENCE";
+
+/* Channel Detail */
+"channel.header" = "ROGER";
+"channel.frequencyChannel" = "FRÉQUENCE CANAL";
+"channel.ptt.idle" = "MAINTENIR POUR PARLER";
+"channel.ptt.recording" = "ENREGISTREMENT...";
+"channel.ptt.sending" = "ENVOI...";
+"channel.ptt.push" = "PUSH";
+"channel.leave.title" = "Quitter la fréquence ?";
+"channel.leave.message" = "Tu ne recevras plus les messages de \"%@\"";
+"channel.leave.button" = "Quitter";
+"channel.delete.title" = "Supprimer la fréquence ?";
+"channel.delete.message" = "La fréquence \"%@\" sera supprimée pour tous les membres";
+"channel.delete.button" = "Supprimer";
+"channel.cancel" = "Annuler";
+"channel.copied" = "Copié !";
+"channel.speaking" = "%@ parle...";
+
+/* Members Sheet */
+"members.title" = "MEMBRES";
+"members.empty" = "Aucun membre pour l'instant";
+"members.you" = "(toi)";
+"members.speaking" = "En train de parler...";
+"members.joined" = "Rejoint %@";
+"members.kick.title" = "Exclure ce membre ?";
+"members.kick.message" = "%@ ne pourra plus voir ou poster sur cette fréquence";
+"members.kick.button" = "Exclure";
+
+/* Voice Message */
+"voice.duration" = "%ds";
+"voice.countdown" = "%d:%02d";
+
+/* Errors */
+"error.icloudRequired" = "Active iCloud dans Réglages pour utiliser Roger";
+"error.icloudRestricted" = "iCloud est restreint sur cet appareil";
+"error.icloudUnavailable" = "iCloud temporairement indisponible";
+"error.icloudError" = "Erreur iCloud : %@";
+"error.loadFailed" = "Impossible de charger les fréquences";
+"error.frequencyNotFound" = "Fréquence introuvable pour le code %@";
+"error.indexMissing" = "Index CloudKit manquant. Ajoute un index Queryable sur le champ 'code' du record type 'Frequency' dans le CloudKit Dashboard.";
+"error.joinFailed" = "Erreur : %@";
+"error.icloudNotAvailable" = "iCloud non disponible";
+
+/* Share */
+"share.message" = "Rejoins ma fréquence \"%@\" sur Roger !\n%@\n\nCode : %@";

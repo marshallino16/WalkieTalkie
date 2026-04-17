@@ -22,7 +22,7 @@ struct MembersSheet: View {
 
                 // Title
                 VStack(spacing: 6) {
-                    Text("MEMBRES")
+                    Text(L10n.string("members.title"))
                         .font(.system(size: 20, weight: .black, design: .rounded))
                         .foregroundStyle(WTTheme.yellow)
                         .tracking(2)
@@ -38,7 +38,7 @@ struct MembersSheet: View {
                         Image(systemName: "person.2.slash")
                             .font(.system(size: 40, weight: .light))
                             .foregroundStyle(WTTheme.mediumGray)
-                        Text("Aucun membre pour l'instant")
+                        Text(L10n.string("members.empty"))
                             .font(WTTheme.bodyFont)
                             .foregroundStyle(WTTheme.lightGray)
                         Spacer()
@@ -55,12 +55,12 @@ struct MembersSheet: View {
                 }
             }
         }
-        .alert("Exclure ce membre ?", isPresented: Binding(
+        .alert(L10n.string("members.kick.title"), isPresented: Binding(
             get: { memberToKick != nil },
             set: { if !$0 { memberToKick = nil } }
         )) {
-            Button("Annuler", role: .cancel) { memberToKick = nil }
-            Button("Exclure", role: .destructive) {
+            Button(L10n.string("channel.cancel"), role: .cancel) { memberToKick = nil }
+            Button(L10n.string("members.kick.button"), role: .destructive) {
                 if let member = memberToKick {
                     onKick(member)
                 }
@@ -68,7 +68,7 @@ struct MembersSheet: View {
             }
         } message: {
             if let m = memberToKick {
-                Text("\(m.displayName) ne pourra plus voir ou poster sur cette fréquence")
+                Text(L10n.string("members.kick.message", m.displayName))
             }
         }
     }
@@ -100,7 +100,7 @@ struct MembersSheet: View {
                         .foregroundStyle(.white)
 
                     if member.userID == currentUserID {
-                        Text("(toi)")
+                        Text(L10n.string("members.you"))
                             .font(WTTheme.captionFont)
                             .foregroundStyle(WTTheme.lightGray)
                     }
@@ -111,7 +111,7 @@ struct MembersSheet: View {
                         Image(systemName: "waveform")
                             .font(.system(size: 10))
                             .symbolEffect(.variableColor.iterative, isActive: true)
-                        Text("En train de parler...")
+                        Text(L10n.string("members.speaking"))
                     }
                     .font(WTTheme.monoSmallFont)
                     .foregroundStyle(WTTheme.green)

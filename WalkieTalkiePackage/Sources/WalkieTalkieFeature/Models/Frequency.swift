@@ -64,14 +64,18 @@ struct Frequency: Identifiable, Hashable, Sendable, Codable {
 
     /// Share text with deep link
     var shareText: String {
-        "Rejoins ma fréquence \"\(name)\" sur Roger !\n\(shareURL.absoluteString)\n\nCode : \(code)"
+        L10n.string("share.message", name, shareURL.absoluteString, code)
     }
 
-    /// Generate a fake radio frequency number for display
+    /// Generate a deterministic fake radio frequency number for display.
+    /// Uses djb2 hash (stable across launches, unlike Swift's hashValue).
     var displayFrequency: String {
-        let hash = abs(code.hashValue)
-        let major = 400 + (hash % 100)
-        let minor = (hash / 100) % 1000
+        var hash: UInt64 = 5381
+        for byte in code.utf8 {
+            hash = ((hash &<< 5) &+ hash) &+ UInt64(byte)
+        }
+        let major = 400 + Int(hash % 100)
+        let minor = Int((hash / 100) % 1000)
         return String(format: "%d.%03d", major, minor)
     }
 }
