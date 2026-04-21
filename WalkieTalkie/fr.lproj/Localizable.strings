@@ -83,3 +83,32 @@
 
 /* Share */
 "share.message" = "Rejoins ma fréquence \"%@\" sur Roger !\n%@\n\nCode : %@";
+
+/* Canaux publics */
+"create.publicToggle" = "Canal public";
+"create.publicHint" = "Les canaux publics sont visibles par tous dans l'Explorer";
+"join.tabCode" = "CODE";
+"join.tabExplorer" = "EXPLORER";
+"explorer.search" = "Rechercher un canal public...";
+"explorer.empty" = "Aucun canal public trouvé";
+"explorer.members" = "%d membres";
+"explorer.join" = "REJOINDRE";
+"error.banned" = "Vous êtes banni de ce canal";
+"error.alreadyJoined" = "Vous avez déjà rejoint ce canal";
+
+/* Modération */
+"members.role.creator" = "CRÉATEUR";
+"members.role.mod" = "MOD";
+"members.kick" = "Kick";
+"members.ban" = "Bannir";
+"members.promote" = "Nommer modérateur";
+"members.demote" = "Retirer modérateur";
+"members.unban" = "Débannir";
+"members.banned.title" = "BANNIS";
+"members.banned.empty" = "Aucun utilisateur banni";
+"members.ban.title" = "Bannir ce membre ?";
+"members.ban.message" = "%@ sera définitivement banni de ce canal";
+"members.ban.button" = "Bannir";
+"members.promote.title" = "Nommer modérateur ?";
+"members.promote.message" = "%@ pourra kick et bannir des membres";
+"members.promote.button" = "Nommer";

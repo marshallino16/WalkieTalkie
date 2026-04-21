@@ -83,3 +83,32 @@
 
 /* Share */
 "share.message" = "Join my frequency \"%@\" on Roger!\n%@\n\nCode: %@";
+
+/* Public Channels */
+"create.publicToggle" = "Public channel";
+"create.publicHint" = "Public channels are visible to everyone in Explorer";
+"join.tabCode" = "CODE";
+"join.tabExplorer" = "EXPLORER";
+"explorer.search" = "Search a public channel...";
+"explorer.empty" = "No public channels found";
+"explorer.members" = "%d members";
+"explorer.join" = "JOIN";
+"error.banned" = "You are banned from this channel";
+"error.alreadyJoined" = "You already joined this channel";
+
+/* Moderation */
+"members.role.creator" = "CREATOR";
+"members.role.mod" = "MOD";
+"members.kick" = "Kick";
+"members.ban" = "Ban";
+"members.promote" = "Promote to mod";
+"members.demote" = "Remove mod";
+"members.unban" = "Unban";
+"members.banned.title" = "BANNED";
+"members.banned.empty" = "No banned users";
+"members.ban.title" = "Ban this member?";
+"members.ban.message" = "%@ will be permanently banned from this channel";
+"members.ban.button" = "Ban";
+"members.promote.title" = "Promote to moderator?";
+"members.promote.message" = "%@ will be able to kick and ban members";
+"members.promote.button" = "Promote";
