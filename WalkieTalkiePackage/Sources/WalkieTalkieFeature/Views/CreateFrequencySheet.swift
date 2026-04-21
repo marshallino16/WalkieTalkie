@@ -1,13 +1,14 @@
 import SwiftUI
 
 struct CreateFrequencySheet: View {
-    let onCreate: (String, String, String) -> Void // (name, code, displayName)
+    let onCreate: (String, String, String, Bool) -> Void // (name, code, displayName, isPublic)
 
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
     @State private var displayName = ""
     @State private var generatedCode = Frequency.generateCode()
     @State private var copied = false
+    @State private var isPublic = false
     @FocusState private var focusedField: Field?
 
     private enum Field {
@@ -109,13 +110,29 @@ struct CreateFrequencySheet: View {
                     .clipShape(.rect(cornerRadius: WTTheme.smallCornerRadius))
                 }
 
+                // Public toggle
+                VStack(alignment: .leading, spacing: 6) {
+                    Toggle(isOn: $isPublic) {
+                        Text(L10n.string("create.publicToggle"))
+                            .font(WTTheme.bodyFont)
+                            .foregroundStyle(.white)
+                    }
+                    .tint(WTTheme.yellow)
+                    .padding(.horizontal, 4)
+
+                    Text(L10n.string("create.publicHint"))
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(WTTheme.lightGray)
+                }
+                .padding(.horizontal, 24)
+
                 Spacer()
 
                 Button {
                     let trimmedName = name.trimmingCharacters(in: .whitespaces)
                     let trimmedDisplay = displayName.trimmingCharacters(in: .whitespaces)
                     guard !trimmedName.isEmpty, !trimmedDisplay.isEmpty else { return }
-                    onCreate(trimmedName, generatedCode, trimmedDisplay)
+                    onCreate(trimmedName, generatedCode, trimmedDisplay, isPublic)
                 } label: {
                     Text(L10n.string("create.button"))
                         .font(.system(size: 16, weight: .black, design: .rounded))

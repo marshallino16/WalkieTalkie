@@ -68,9 +68,9 @@ struct FrequencyListView: View {
             }
         }
         .sheet(isPresented: $viewModel.showCreateSheet) {
-            CreateFrequencySheet { name, code, displayName in
+            CreateFrequencySheet { name, code, displayName, isPublic in
                 Task {
-                    if let freq = await viewModel.createFrequency(name: name, code: code, displayName: displayName) {
+                    if let freq = await viewModel.createFrequency(name: name, code: code, displayName: displayName, isPublic: isPublic) {
                         viewModel.showCreateSheet = false
                         onSelect(freq)
                     }
