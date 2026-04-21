@@ -126,11 +126,12 @@ final class FrequencyListViewModel {
 
     // MARK: - Create
 
-    func createFrequency(name: String, code: String, displayName: String) async -> Frequency? {
+    func createFrequency(name: String, code: String, displayName: String, isPublic: Bool = false) async -> Frequency? {
         let frequency = Frequency(
             name: name,
             code: code,
-            creatorID: userID
+            creatorID: userID,
+            isPublic: isPublic
         )
 
         // Save pseudo for future use
@@ -142,8 +143,15 @@ final class FrequencyListViewModel {
                 let record = frequency.toRecord()
                 _ = try await cloudKit.publicDB.save(record)
                 Log.cloudkit.info("Frequency saved: \(code, privacy: .public)")
-                try await cloudKit.joinFrequency(frequency, userID: userID, displayName: displayName)
-                Log.cloudkit.info("Member joined: \(displayName, privacy: .public)")
+                // Join as creator
+                let member = FrequencyMember(
+                    frequencyRef: CKRecord.Reference(recordID: frequency.ckRecordID, action: .none),
+                    userID: userID,
+                    displayName: displayName,
+                    role: .creator
+                )
+                _ = try await cloudKit.publicDB.save(member.toRecord())
+                Log.cloudkit.info("Creator joined: \(displayName, privacy: .public)")
                 try? await cloudKit.subscribeToMessages(for: frequency)
             } catch {
                 Log.cloudkit.error("Create frequency error: \(error, privacy: .public)")
@@ -184,6 +192,34 @@ final class FrequencyListViewModel {
         } catch {
             self.error = L10n.string("error.joinFailed", error.localizedDescription)
             Log.cloudkit.error("Join error: \(error, privacy: .public)")
+            return nil
+        }
+    }
+
+    func joinPublicFrequency(_ frequency: Frequency, displayName: String) async -> Frequency? {
+        guard cloudKit.isAvailable else {
+            self.error = L10n.string("error.icloudNotAvailable")
+            return nil
+        }
+
+        guard !frequencies.contains(where: { $0.code == frequency.code }) else {
+            self.error = L10n.string("error.alreadyJoined")
+            return nil
+        }
+
+        do {
+            try await cloudKit.joinFrequency(frequency, userID: userID, displayName: displayName)
+            Log.cloudkit.info("Joined public frequency: \(frequency.name, privacy: .public)")
+            try? await cloudKit.subscribeToMessages(for: frequency)
+            frequencies.insert(frequency, at: 0)
+            saveLocal()
+            return frequency
+        } catch let error as CloudKitError where error == .userBanned {
+            self.error = L10n.string("error.banned")
+            return nil
+        } catch {
+            self.error = L10n.string("error.joinFailed", error.localizedDescription)
+            Log.cloudkit.error("Join public error: \(error, privacy: .public)")
             return nil
         }
     }
