@@ -1,3 +1,4 @@
+import CloudKit
 import SwiftUI
 import UserNotifications
 import WalkieTalkieFeature
@@ -21,6 +22,19 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         application.registerForRemoteNotifications()
         UNUserNotificationCenter.current().delegate = self
         return true
+    }
+
+    // MARK: - Remote Notification Handling
+
+    func application(_ application: UIApplication,
+                     didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        guard let notification = CKNotification(fromRemoteNotificationDictionary: userInfo),
+              notification is CKQueryNotification else {
+            completionHandler(.noData)
+            return
+        }
+        completionHandler(.newData)
     }
 
     // Show notifications even when app is in foreground

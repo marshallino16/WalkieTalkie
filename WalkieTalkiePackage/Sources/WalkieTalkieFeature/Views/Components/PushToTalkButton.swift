@@ -3,18 +3,23 @@ import SwiftUI
 struct PushToTalkButton: View {
     let isRecording: Bool
     let progress: Double
+    var accentColor: Color = WTTheme.yellow
     let onStart: () -> Void
     let onStop: () -> Void
 
     @State private var isPressing = false
     @State private var pulseScale: CGFloat = 1.0
 
+    private var accentColorDark: Color {
+        accentColor.opacity(0.8)
+    }
+
     var body: some View {
         ZStack {
             // Pulse ring when recording
             if isRecording {
                 Circle()
-                    .fill(WTTheme.yellow.opacity(0.15))
+                    .fill(accentColor.opacity(0.15))
                     .frame(width: WTTheme.pttButtonSize + 40, height: WTTheme.pttButtonSize + 40)
                     .scaleEffect(pulseScale)
                     .onAppear {
@@ -34,7 +39,7 @@ struct PushToTalkButton: View {
 
             Circle()
                 .trim(from: 0, to: progress)
-                .stroke(WTTheme.yellow, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .stroke(accentColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                 .frame(width: WTTheme.pttButtonSize + 12, height: WTTheme.pttButtonSize + 12)
                 .rotationEffect(.degrees(-90))
                 .animation(.linear(duration: 0.05), value: progress)
@@ -43,14 +48,14 @@ struct PushToTalkButton: View {
             Circle()
                 .fill(
                     isRecording
-                        ? LinearGradient(colors: [WTTheme.yellow, WTTheme.yellowDark], startPoint: .top, endPoint: .bottom)
+                        ? LinearGradient(colors: [accentColor, accentColorDark], startPoint: .top, endPoint: .bottom)
                         : LinearGradient(colors: [WTTheme.darkGray, WTTheme.black], startPoint: .top, endPoint: .bottom)
                 )
                 .frame(width: WTTheme.pttButtonSize, height: WTTheme.pttButtonSize)
                 .overlay(
                     Circle()
                         .strokeBorder(
-                            isRecording ? WTTheme.yellowDark : WTTheme.mediumGray,
+                            isRecording ? accentColorDark : WTTheme.mediumGray,
                             lineWidth: 3
                         )
                 )
@@ -58,13 +63,13 @@ struct PushToTalkButton: View {
                     VStack(spacing: 4) {
                         Image(systemName: isRecording ? "waveform" : "mic.fill")
                             .font(.system(size: 28, weight: .bold))
-                            .foregroundStyle(isRecording ? .black : WTTheme.yellow)
+                            .foregroundStyle(isRecording ? .black : accentColor)
                             .symbolEffect(.variableColor.iterative, isActive: isRecording)
 
                         if !isRecording {
                             Text("PUSH")
                                 .font(.system(size: 10, weight: .black, design: .rounded))
-                                .foregroundStyle(WTTheme.yellow.opacity(0.7))
+                                .foregroundStyle(accentColor.opacity(0.7))
                                 .tracking(2)
                         }
                     }

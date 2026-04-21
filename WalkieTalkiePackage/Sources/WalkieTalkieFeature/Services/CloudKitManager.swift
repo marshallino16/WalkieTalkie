@@ -207,23 +207,28 @@ final class CloudKitManager {
     // MARK: - Subscriptions
 
     func subscribeToMessages(for frequency: Frequency) async throws {
+        let subID = "messages-\(frequency.recordName)"
+
+        // Delete existing subscription first — save() fails on duplicate IDs
+        try? await publicDB.deleteSubscription(withID: subID)
+
         let ref = CKRecord.Reference(recordID: frequency.ckRecordID, action: .none)
         let predicate = NSPredicate(format: "frequencyRef == %@", ref)
         let subscription = CKQuerySubscription(
             recordType: VoiceMessage.recordType,
             predicate: predicate,
-            subscriptionID: "messages-\(frequency.recordName)",
+            subscriptionID: subID,
             options: [.firesOnRecordCreation]
         )
 
         let info = CKSubscription.NotificationInfo()
-        // Single user-visible notification: title = channel name, body = "[sender] a parlé"
         info.title = frequency.name
         info.alertLocalizationKey = "VOICE_MESSAGE_BODY"
         info.alertLocalizationArgs = ["senderName"]
         info.soundName = "default"
         info.shouldBadge = true
         info.shouldSendContentAvailable = true
+        info.desiredKeys = ["senderName"]
         subscription.notificationInfo = info
 
         _ = try await publicDB.save(subscription)

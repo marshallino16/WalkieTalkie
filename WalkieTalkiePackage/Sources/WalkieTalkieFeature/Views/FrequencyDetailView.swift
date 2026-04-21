@@ -74,7 +74,7 @@ struct FrequencyDetailView: View {
                     SpeakerGrilleView(
                         rows: 14,
                         columns: 10,
-                        dotColor: WTTheme.yellowDark.opacity(0.5)
+                        dotColor: .black.opacity(0.12)
                     )
 
                     // Messages overlay
@@ -268,6 +268,7 @@ struct FrequencyDetailView: View {
                     }
                     return 0
                 }(),
+                accentColor: appearance.color,
                 onStart: {
                     Task { _ = await viewModel.startRecording() }
                 },
