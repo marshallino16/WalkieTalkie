@@ -80,15 +80,27 @@ struct FrequencyListView: View {
             .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $viewModel.showJoinSheet) {
-            JoinFrequencySheet(error: viewModel.error) { code, displayName in
-                Task {
-                    if let freq = await viewModel.joinFrequency(code: code, displayName: displayName) {
-                        viewModel.showJoinSheet = false
-                        onSelect(freq)
+            JoinFrequencySheet(
+                error: viewModel.error,
+                onJoin: { code, displayName in
+                    Task {
+                        if let freq = await viewModel.joinFrequency(code: code, displayName: displayName) {
+                            viewModel.showJoinSheet = false
+                            onSelect(freq)
+                        }
+                    }
+                },
+                cloudKit: viewModel.cloudKit,
+                joinedCodes: Set(viewModel.frequencies.map(\.code)),
+                onJoinPublic: { frequency, displayName in
+                    Task {
+                        if let _ = await viewModel.joinPublicFrequency(frequency, displayName: displayName) {
+                            viewModel.showJoinSheet = false
+                        }
                     }
                 }
-            }
-            .presentationDetents([.height(480)])
+            )
+            .presentationDetents([.large])
             .presentationDragIndicator(.visible)
         }
         .sheet(item: $customizingFrequency) { freq in
