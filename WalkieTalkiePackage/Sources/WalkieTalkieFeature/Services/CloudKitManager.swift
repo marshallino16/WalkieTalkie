@@ -2,6 +2,16 @@ import CloudKit
 import Foundation
 import Observation
 
+enum CloudKitError: LocalizedError, Equatable {
+    case userBanned
+
+    var errorDescription: String? {
+        switch self {
+        case .userBanned: return L10n.string("error.banned")
+        }
+    }
+}
+
 @MainActor
 @Observable
 final class CloudKitManager {
@@ -105,6 +115,11 @@ final class CloudKitManager {
     // MARK: - Member Operations
 
     func joinFrequency(_ frequency: Frequency, userID: String, displayName: String) async throws {
+        // Check if user is banned
+        if try await isUserBanned(userID: userID, from: frequency) {
+            throw CloudKitError.userBanned
+        }
+
         let member = FrequencyMember(
             frequencyRef: CKRecord.Reference(recordID: frequency.ckRecordID, action: .none),
             userID: userID,
@@ -127,6 +142,63 @@ final class CloudKitManager {
     /// Kick a specific member from a frequency (by recordName)
     func kickMember(_ member: FrequencyMember) async throws {
         try await publicDB.deleteRecord(withID: member.ckRecordID)
+    }
+
+    // MARK: - Bans
+
+    func banUser(userID: String, from frequency: Frequency, by moderatorID: String) async throws {
+        let ban = FrequencyBan(
+            frequencyRef: CKRecord.Reference(recordID: frequency.ckRecordID, action: .none),
+            bannedUserID: userID,
+            bannedBy: moderatorID
+        )
+        _ = try await publicDB.save(ban.toRecord())
+
+        // Remove member record
+        let predicate = NSPredicate(format: "frequencyRef == %@ AND userID == %@",
+                                    CKRecord.Reference(recordID: frequency.ckRecordID, action: .none), userID)
+        let query = CKQuery(recordType: FrequencyMember.recordType, predicate: predicate)
+        let (results, _) = try await publicDB.records(matching: query, resultsLimit: 1)
+        if let recordID = results.first?.0 {
+            try await publicDB.deleteRecord(withID: recordID)
+        }
+    }
+
+    func unbanUser(userID: String, from frequency: Frequency) async throws {
+        let ref = CKRecord.Reference(recordID: frequency.ckRecordID, action: .none)
+        let predicate = NSPredicate(format: "frequencyRef == %@ AND bannedUserID == %@", ref, userID)
+        let query = CKQuery(recordType: FrequencyBan.recordType, predicate: predicate)
+        let (results, _) = try await publicDB.records(matching: query, resultsLimit: 1)
+        if let recordID = results.first?.0 {
+            try await publicDB.deleteRecord(withID: recordID)
+        }
+    }
+
+    func fetchBans(for frequency: Frequency) async throws -> [FrequencyBan] {
+        let ref = CKRecord.Reference(recordID: frequency.ckRecordID, action: .none)
+        let predicate = NSPredicate(format: "frequencyRef == %@", ref)
+        let query = CKQuery(recordType: FrequencyBan.recordType, predicate: predicate)
+        let (results, _) = try await publicDB.records(matching: query)
+        return results.compactMap { _, result in
+            guard case .success(let record) = result else { return nil }
+            return FrequencyBan(record: record)
+        }
+    }
+
+    func isUserBanned(userID: String, from frequency: Frequency) async throws -> Bool {
+        let ref = CKRecord.Reference(recordID: frequency.ckRecordID, action: .none)
+        let predicate = NSPredicate(format: "frequencyRef == %@ AND bannedUserID == %@", ref, userID)
+        let query = CKQuery(recordType: FrequencyBan.recordType, predicate: predicate)
+        let (results, _) = try await publicDB.records(matching: query, resultsLimit: 1)
+        return !results.isEmpty
+    }
+
+    // MARK: - Roles
+
+    func setMemberRole(_ member: FrequencyMember, role: MemberRole) async throws {
+        let record = try await publicDB.record(for: member.ckRecordID)
+        record["role"] = role.rawValue
+        _ = try await publicDB.save(record)
     }
 
     /// Update current user's speaking timestamp (live indicator)
@@ -237,6 +309,28 @@ final class CloudKitManager {
     func unsubscribeFromMessages(for frequency: Frequency) async throws {
         let subID = "messages-\(frequency.recordName)"
         try await publicDB.deleteSubscription(withID: subID)
+    }
+
+    // MARK: - Public Channels
+
+    func fetchPublicFrequencies() async throws -> [Frequency] {
+        let predicate = NSPredicate(format: "isPublic == %d", 1)
+        let query = CKQuery(recordType: Frequency.recordType, predicate: predicate)
+        let (results, _) = try await publicDB.records(matching: query)
+        return results.compactMap { _, result in
+            guard case .success(let record) = result else { return nil }
+            return Frequency(record: record)
+        }
+    }
+
+    func searchPublicFrequencies(name: String) async throws -> [Frequency] {
+        let predicate = NSPredicate(format: "isPublic == %d AND self contains %@", 1, name)
+        let query = CKQuery(recordType: Frequency.recordType, predicate: predicate)
+        let (results, _) = try await publicDB.records(matching: query)
+        return results.compactMap { _, result in
+            guard case .success(let record) = result else { return nil }
+            return Frequency(record: record)
+        }
     }
 
     // MARK: - Delete Frequency (creator only)
