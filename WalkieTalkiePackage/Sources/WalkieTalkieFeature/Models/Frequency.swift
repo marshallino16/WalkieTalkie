@@ -12,15 +12,17 @@ struct Frequency: Identifiable, Hashable, Sendable, Codable {
     let code: String
     let creatorID: String
     let createdAt: Date
+    let isPublic: Bool
 
     var id: String { code }
 
-    init(recordName: String = UUID().uuidString, name: String, code: String, creatorID: String, createdAt: Date = .now) {
+    init(recordName: String = UUID().uuidString, name: String, code: String, creatorID: String, createdAt: Date = .now, isPublic: Bool = false) {
         self.recordName = recordName
         self.name = name
         self.code = code
         self.creatorID = creatorID
         self.createdAt = createdAt
+        self.isPublic = isPublic
     }
 
     var ckRecordID: CKRecord.ID { CKRecord.ID(recordName: recordName) }
@@ -38,6 +40,7 @@ struct Frequency: Identifiable, Hashable, Sendable, Codable {
         self.code = code
         self.creatorID = creatorID
         self.createdAt = createdAt
+        self.isPublic = (record["isPublic"] as? Int64 ?? 0) == 1
     }
 
     func toRecord() -> CKRecord {
@@ -46,7 +49,22 @@ struct Frequency: Identifiable, Hashable, Sendable, Codable {
         record["code"] = code
         record["creatorID"] = creatorID
         record["createdAt"] = createdAt
+        record["isPublic"] = (isPublic ? 1 : 0) as Int64
         return record
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case recordName, name, code, creatorID, createdAt, isPublic
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        recordName = try c.decode(String.self, forKey: .recordName)
+        name = try c.decode(String.self, forKey: .name)
+        code = try c.decode(String.self, forKey: .code)
+        creatorID = try c.decode(String.self, forKey: .creatorID)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        isPublic = (try? c.decode(Bool.self, forKey: .isPublic)) ?? false
     }
 
     /// Generate a random frequency code like "XKCD-4782"
