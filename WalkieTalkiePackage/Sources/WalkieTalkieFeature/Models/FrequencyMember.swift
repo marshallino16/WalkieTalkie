@@ -10,6 +10,7 @@ struct FrequencyMember: Identifiable, Sendable {
     let joinedAt: Date
     let displayName: String
     let speakingUntil: Date?
+    let role: MemberRole
 
     var id: String { recordName }
     var ckRecordID: CKRecord.ID { CKRecord.ID(recordName: recordName) }
@@ -26,7 +27,8 @@ struct FrequencyMember: Identifiable, Sendable {
         userID: String,
         displayName: String,
         joinedAt: Date = .now,
-        speakingUntil: Date? = nil
+        speakingUntil: Date? = nil,
+        role: MemberRole = .member
     ) {
         self.recordName = recordName
         self.frequencyRef = frequencyRef
@@ -34,6 +36,7 @@ struct FrequencyMember: Identifiable, Sendable {
         self.displayName = displayName
         self.joinedAt = joinedAt
         self.speakingUntil = speakingUntil
+        self.role = role
     }
 
     init?(record: CKRecord) {
@@ -50,6 +53,7 @@ struct FrequencyMember: Identifiable, Sendable {
         self.displayName = displayName
         self.joinedAt = joinedAt
         self.speakingUntil = record["speakingUntil"] as? Date
+        self.role = MemberRole(rawValue: record["role"] as? String)
     }
 
     func toRecord() -> CKRecord {
@@ -61,6 +65,7 @@ struct FrequencyMember: Identifiable, Sendable {
         if let speakingUntil {
             record["speakingUntil"] = speakingUntil
         }
+        record["role"] = role.rawValue
         return record
     }
 }
