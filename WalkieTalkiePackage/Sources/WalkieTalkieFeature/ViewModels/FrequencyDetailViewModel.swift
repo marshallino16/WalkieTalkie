@@ -16,6 +16,7 @@ final class FrequencyDetailViewModel {
     private(set) var isLoading = false
     private(set) var isSending = false
     private(set) var playingMessageID: String?
+    private(set) var bans: [FrequencyBan] = []
 
     private var refreshTimer: Timer?
     private var listenedMessageIDs: Set<String>
@@ -41,9 +42,18 @@ final class FrequencyDetailViewModel {
 
     // MARK: - Data Loading
 
+    private func loadBans() async {
+        do {
+            bans = try await cloudKit.fetchBans(for: frequency)
+        } catch {
+            // Silent fail
+        }
+    }
+
     func startPolling() {
         Task { await loadMessages() }
         Task { await loadMembers() }
+        Task { await loadBans() }
 
         // Poll every 2.5 seconds for members (live indicator) and messages
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [weak self] _ in
@@ -105,14 +115,63 @@ final class FrequencyDetailViewModel {
 
     var isCreator: Bool { frequency.creatorID == userID }
 
+    var currentUserRole: MemberRole {
+        members.first(where: { $0.userID == userID })?.role ?? .member
+    }
+
     func kickMember(_ member: FrequencyMember) async {
-        guard isCreator, member.userID != userID else { return }
+        guard currentUserRole.canKick, member.role.canBeKicked, member.userID != userID else { return }
         do {
             try await cloudKit.kickMember(member)
             members.removeAll { $0.recordName == member.recordName }
             Log.cloudkit.info("Kicked member: \(member.displayName, privacy: .public)")
         } catch {
             Log.cloudkit.error("Kick error: \(error, privacy: .public)")
+        }
+    }
+
+    func banMember(_ member: FrequencyMember) async {
+        guard currentUserRole.canBan, member.role.canBeKicked, member.userID != userID else { return }
+        do {
+            try await cloudKit.banUser(userID: member.userID, from: frequency, by: userID)
+            members.removeAll { $0.recordName == member.recordName }
+            await loadBans()
+            Log.cloudkit.info("Banned member: \(member.displayName, privacy: .public)")
+        } catch {
+            Log.cloudkit.error("Ban error: \(error, privacy: .public)")
+        }
+    }
+
+    func unbanUser(_ ban: FrequencyBan) async {
+        guard currentUserRole.canBan else { return }
+        do {
+            try await cloudKit.unbanUser(userID: ban.bannedUserID, from: frequency)
+            bans.removeAll { $0.id == ban.id }
+            Log.cloudkit.info("Unbanned user: \(ban.bannedUserID, privacy: .public)")
+        } catch {
+            Log.cloudkit.error("Unban error: \(error, privacy: .public)")
+        }
+    }
+
+    func promoteMember(_ member: FrequencyMember) async {
+        guard currentUserRole.canPromote, member.role == .member else { return }
+        do {
+            try await cloudKit.setMemberRole(member, role: .moderator)
+            await loadMembers()
+            Log.cloudkit.info("Promoted: \(member.displayName, privacy: .public)")
+        } catch {
+            Log.cloudkit.error("Promote error: \(error, privacy: .public)")
+        }
+    }
+
+    func demoteMember(_ member: FrequencyMember) async {
+        guard currentUserRole.canPromote, member.role == .moderator else { return }
+        do {
+            try await cloudKit.setMemberRole(member, role: .member)
+            await loadMembers()
+            Log.cloudkit.info("Demoted: \(member.displayName, privacy: .public)")
+        } catch {
+            Log.cloudkit.error("Demote error: \(error, privacy: .public)")
         }
     }
 
