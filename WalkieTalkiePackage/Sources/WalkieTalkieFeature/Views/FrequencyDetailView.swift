@@ -114,12 +114,15 @@ struct FrequencyDetailView: View {
         .sheet(isPresented: $showMembers) {
             MembersSheet(
                 members: viewModel.members,
+                bans: viewModel.bans,
                 frequencyName: viewModel.frequency.name,
                 currentUserID: viewModel.userID,
-                isCurrentUserCreator: viewModel.isCreator,
-                onKick: { member in
-                    Task { await viewModel.kickMember(member) }
-                }
+                currentUserRole: viewModel.currentUserRole,
+                onKick: { member in Task { await viewModel.kickMember(member) } },
+                onBan: { member in Task { await viewModel.banMember(member) } },
+                onUnban: { ban in Task { await viewModel.unbanUser(ban) } },
+                onPromote: { member in Task { await viewModel.promoteMember(member) } },
+                onDemote: { member in Task { await viewModel.demoteMember(member) } }
             )
             .presentationDetents([.medium])
             .presentationDragIndicator(.visible)
