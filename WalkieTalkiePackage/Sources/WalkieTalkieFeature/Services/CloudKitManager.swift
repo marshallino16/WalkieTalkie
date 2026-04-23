@@ -4,10 +4,12 @@ import Observation
 
 enum CloudKitError: LocalizedError, Equatable {
     case userBanned
+    case displayNameTaken
 
     var errorDescription: String? {
         switch self {
         case .userBanned: return L10n.string("error.banned")
+        case .displayNameTaken: return L10n.string("error.pseudoTaken")
         }
     }
 }
@@ -115,28 +117,77 @@ final class CloudKitManager {
     // MARK: - Member Operations
 
     func joinFrequency(_ frequency: Frequency, userID: String, displayName: String) async throws {
-        // Check if user is banned
-        if try await isUserBanned(userID: userID, from: frequency) {
+        // Check if user is banned (graceful: FrequencyBan record type may not exist yet)
+        let isBanned = (try? await isUserBanned(userID: userID, from: frequency)) ?? false
+        if isBanned {
             throw CloudKitError.userBanned
         }
 
+        let ref = CKRecord.Reference(recordID: frequency.ckRecordID, action: .none)
+
+        // Check if user is already a member — update displayName instead of creating a duplicate
+        let memberPredicate = NSPredicate(format: "frequencyRef == %@ AND userID == %@", ref, userID)
+        let memberQuery = CKQuery(recordType: FrequencyMember.recordType, predicate: memberPredicate)
+        let (existing, _) = try await publicDB.records(matching: memberQuery, resultsLimit: 1)
+
+        if let (_, result) = existing.first, let record = try? result.get() {
+            // Already a member — just update displayName if it changed
+            let oldName = record["displayName"] as? String ?? ""
+            if oldName != displayName {
+                // Verify the new name isn't taken by someone else
+                if try await isDisplayNameTaken(displayName, in: frequency, excludingUserID: userID) {
+                    throw CloudKitError.displayNameTaken
+                }
+                record["displayName"] = displayName
+                _ = try await publicDB.save(record)
+            }
+            return
+        }
+
+        // New member — check displayName availability
+        if try await isDisplayNameTaken(displayName, in: frequency, excludingUserID: userID) {
+            throw CloudKitError.displayNameTaken
+        }
+
         let member = FrequencyMember(
-            frequencyRef: CKRecord.Reference(recordID: frequency.ckRecordID, action: .none),
+            frequencyRef: ref,
             userID: userID,
             displayName: displayName
         )
         _ = try await publicDB.save(member.toRecord())
     }
 
+    /// Check if a displayName is already used in a frequency by another user
+    func isDisplayNameTaken(_ displayName: String, in frequency: Frequency, excludingUserID userID: String) async throws -> Bool {
+        let ref = CKRecord.Reference(recordID: frequency.ckRecordID, action: .none)
+        let predicate = NSPredicate(format: "frequencyRef == %@ AND displayName ==[c] %@", ref, displayName)
+        let query = CKQuery(recordType: FrequencyMember.recordType, predicate: predicate)
+        let (results, _) = try await publicDB.records(matching: query, resultsLimit: 5)
+        // Check if any of the results belong to a different user
+        return results.contains { _, result in
+            guard let record = try? result.get() else { return false }
+            return (record["userID"] as? String) != userID
+        }
+    }
+
     func leaveFrequency(_ frequency: Frequency, userID: String) async throws {
         let predicate = NSPredicate(format: "frequencyRef == %@ AND userID == %@",
                                     CKRecord.Reference(recordID: frequency.ckRecordID, action: .none), userID)
         let query = CKQuery(recordType: FrequencyMember.recordType, predicate: predicate)
-        let (results, _) = try await publicDB.records(matching: query, resultsLimit: 1)
-
-        if let recordID = results.first?.0 {
-            try await publicDB.deleteRecord(withID: recordID)
+        // Delete ALL records for this user (handles duplicates)
+        let (results, _) = try await publicDB.records(matching: query)
+        for (recordID, _) in results {
+            try? await publicDB.deleteRecord(withID: recordID)
         }
+    }
+
+    /// Check if a specific user is a member of a frequency (targeted query, not paginated)
+    func isUserMember(userID: String, of frequency: Frequency) async throws -> Bool {
+        let ref = CKRecord.Reference(recordID: frequency.ckRecordID, action: .none)
+        let predicate = NSPredicate(format: "frequencyRef == %@ AND userID == %@", ref, userID)
+        let query = CKQuery(recordType: FrequencyMember.recordType, predicate: predicate)
+        let (results, _) = try await publicDB.records(matching: query, resultsLimit: 1)
+        return !results.isEmpty
     }
 
     /// Kick a specific member from a frequency (by recordName)
@@ -223,10 +274,39 @@ final class CloudKitManager {
         let predicate = NSPredicate(format: "frequencyRef == %@", ref)
         let query = CKQuery(recordType: FrequencyMember.recordType, predicate: predicate)
         let (results, _) = try await publicDB.records(matching: query)
-        return results.compactMap { _, result in
-            guard let record = try? result.get() else { return nil }
+        let allMembers = results.compactMap { _, result in
+            guard let record = try? result.get() else { return nil as FrequencyMember? }
             return FrequencyMember(record: record)
         }
+
+        // Deduplicate: keep the most recent record per userID, delete extras
+        var seen: [String: FrequencyMember] = [:]
+        var duplicateIDs: [CKRecord.ID] = []
+        for member in allMembers {
+            if let existing = seen[member.userID] {
+                // Keep the one with the later joinedAt date
+                if member.joinedAt > existing.joinedAt {
+                    duplicateIDs.append(existing.ckRecordID)
+                    seen[member.userID] = member
+                } else {
+                    duplicateIDs.append(member.ckRecordID)
+                }
+            } else {
+                seen[member.userID] = member
+            }
+        }
+
+        // Clean up duplicates in the background
+        if !duplicateIDs.isEmpty {
+            Log.cloudkit.info("Cleaning \(duplicateIDs.count, privacy: .public) duplicate member records")
+            Task.detached { [publicDB] in
+                for id in duplicateIDs {
+                    try? await publicDB.deleteRecord(withID: id)
+                }
+            }
+        }
+
+        return Array(seen.values).sorted { $0.joinedAt < $1.joinedAt }
     }
 
     func memberCount(for frequency: Frequency) async throws -> Int {
@@ -313,20 +393,20 @@ final class CloudKitManager {
 
     // MARK: - Public Channels
 
-    func fetchPublicFrequencies() async throws -> [Frequency] {
+    func fetchPublicFrequencies() async -> [Frequency] {
         let predicate = NSPredicate(format: "isPublic == %d", 1)
         let query = CKQuery(recordType: Frequency.recordType, predicate: predicate)
-        let (results, _) = try await publicDB.records(matching: query)
+        guard let (results, _) = try? await publicDB.records(matching: query) else { return [] }
         return results.compactMap { _, result in
             guard case .success(let record) = result else { return nil }
             return Frequency(record: record)
         }
     }
 
-    func searchPublicFrequencies(name: String) async throws -> [Frequency] {
-        let predicate = NSPredicate(format: "isPublic == %d AND self contains %@", 1, name)
+    func searchPublicFrequencies(name: String) async -> [Frequency] {
+        let predicate = NSPredicate(format: "isPublic == %d AND name BEGINSWITH[c] %@", 1, name)
         let query = CKQuery(recordType: Frequency.recordType, predicate: predicate)
-        let (results, _) = try await publicDB.records(matching: query)
+        guard let (results, _) = try? await publicDB.records(matching: query) else { return [] }
         return results.compactMap { _, result in
             guard case .success(let record) = result else { return nil }
             return Frequency(record: record)
@@ -352,6 +432,15 @@ final class CloudKitManager {
         let (msgResults, _) = try await publicDB.records(matching: msgQuery)
         for (recordID, _) in msgResults {
             _ = try? await publicDB.deleteRecord(withID: recordID)
+        }
+
+        // Delete bans (record type may not exist yet)
+        if let (banResults, _) = try? await publicDB.records(
+            matching: CKQuery(recordType: FrequencyBan.recordType, predicate: NSPredicate(format: "frequencyRef == %@", ref))
+        ) {
+            for (recordID, _) in banResults {
+                _ = try? await publicDB.deleteRecord(withID: recordID)
+            }
         }
 
         // Delete subscription

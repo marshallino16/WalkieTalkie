@@ -5,11 +5,13 @@ struct FrequencyDetailView: View {
     var appearance: FrequencyAppearance = .default
     var onLeave: (() -> Void)?
     var onDelete: (() -> Void)?
+    var onKicked: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @State private var showMembers = false
     @State private var showLeaveConfirm = false
     @State private var showDeleteConfirm = false
     @State private var codeCopied = false
+    @State private var showRemovalOverlay = false
 
     private var isCreator: Bool { viewModel.isCreator }
 
@@ -111,6 +113,23 @@ struct FrequencyDetailView: View {
         .navigationBarHidden(true)
         .onAppear { viewModel.startPolling() }
         .onDisappear { viewModel.stopPolling() }
+        .onChange(of: viewModel.removalReason) {
+            if viewModel.removalReason != nil {
+                withAnimation(.easeInOut(duration: 0.4)) {
+                    showRemovalOverlay = true
+                }
+            }
+        }
+        .overlay {
+            if showRemovalOverlay, let reason = viewModel.removalReason {
+                RemovalOverlayView(
+                    reason: reason,
+                    frequencyName: viewModel.frequency.name
+                ) {
+                    onKicked?()
+                }
+            }
+        }
         .sheet(isPresented: $showMembers) {
             MembersSheet(
                 members: viewModel.members,

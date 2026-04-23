@@ -3,6 +3,7 @@ import SwiftUI
 struct JoinFrequencySheet: View {
     let error: String?
     let onJoin: (String, String) -> Void // (code, displayName)
+    let onClearError: () -> Void
     let cloudKit: CloudKitManager
     let joinedCodes: Set<String>
     let onJoinPublic: (Frequency, String) -> Void
@@ -102,6 +103,7 @@ struct JoinFrequencySheet: View {
                     .submitLabel(.next)
                     .onSubmit { focusedField = .name }
                     .onChange(of: code) {
+                        onClearError()
                         // Auto-format: strip non-alphanumeric, insert dash after 4 chars
                         let clean = String(code.uppercased().filter { $0.isLetter || $0.isNumber })
                         if clean.count > 4 {

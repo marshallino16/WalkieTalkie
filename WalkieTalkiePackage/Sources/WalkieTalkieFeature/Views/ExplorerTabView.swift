@@ -66,14 +66,9 @@ struct ExplorerTabView: View {
                 }
             }
         }
-        .task {
+        .task(id: searchText) {
+            try? await Task.sleep(for: .milliseconds(300))
             await loadChannels()
-        }
-        .onChange(of: searchText) {
-            Task {
-                try? await Task.sleep(for: .milliseconds(300))
-                await loadChannels()
-            }
         }
     }
 
@@ -81,31 +76,27 @@ struct ExplorerTabView: View {
         isLoading = true
         defer { isLoading = false }
 
-        do {
-            let fetched: [Frequency]
-            if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
-                fetched = try await cloudKit.fetchPublicFrequencies()
-            } else {
-                fetched = try await cloudKit.searchPublicFrequencies(name: searchText.trimmingCharacters(in: .whitespaces))
-            }
-
-            var counts: [String: Int] = [:]
-            await withTaskGroup(of: (String, Int).self) { group in
-                for freq in fetched {
-                    group.addTask {
-                        let count = (try? await self.cloudKit.memberCount(for: freq)) ?? 0
-                        return (freq.code, count)
-                    }
-                }
-                for await (code, count) in group {
-                    counts[code] = count
-                }
-            }
-            memberCounts = counts
-            channels = fetched.sorted { counts[$0.code, default: 0] > counts[$1.code, default: 0] }
-        } catch {
-            channels = []
+        let fetched: [Frequency]
+        if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+            fetched = await cloudKit.fetchPublicFrequencies()
+        } else {
+            fetched = await cloudKit.searchPublicFrequencies(name: searchText.trimmingCharacters(in: .whitespaces))
         }
+
+        var counts: [String: Int] = [:]
+        await withTaskGroup(of: (String, Int).self) { group in
+            for freq in fetched {
+                group.addTask {
+                    let count = (try? await self.cloudKit.memberCount(for: freq)) ?? 0
+                    return (freq.code, count)
+                }
+            }
+            for await (code, count) in group {
+                counts[code] = count
+            }
+        }
+        memberCounts = counts
+        channels = fetched.sorted { counts[$0.code, default: 0] > counts[$1.code, default: 0] }
     }
 
     private func channelRow(_ channel: Frequency) -> some View {

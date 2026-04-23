@@ -9,6 +9,7 @@ struct CreateFrequencySheet: View {
     @State private var generatedCode = Frequency.generateCode()
     @State private var copied = false
     @State private var isPublic = false
+    @State private var isCreating = false
     @FocusState private var focusedField: Field?
 
     private enum Field {
@@ -131,16 +132,22 @@ struct CreateFrequencySheet: View {
                 Button {
                     let trimmedName = name.trimmingCharacters(in: .whitespaces)
                     let trimmedDisplay = displayName.trimmingCharacters(in: .whitespaces)
-                    guard !trimmedName.isEmpty, !trimmedDisplay.isEmpty else { return }
+                    guard !trimmedName.isEmpty, !trimmedDisplay.isEmpty, !isCreating else { return }
+                    isCreating = true
                     onCreate(trimmedName, generatedCode, trimmedDisplay, isPublic)
                 } label: {
-                    Text(L10n.string("create.button"))
-                        .font(.system(size: 16, weight: .black, design: .rounded))
-                        .tracking(1)
+                    if isCreating {
+                        ProgressView()
+                            .tint(.black)
+                    } else {
+                        Text(L10n.string("create.button"))
+                            .font(.system(size: 16, weight: .black, design: .rounded))
+                            .tracking(1)
+                    }
                 }
                 .buttonStyle(WTYellowButtonStyle())
                 .padding(.horizontal, 24)
-                .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty ||
+                .disabled(isCreating || name.trimmingCharacters(in: .whitespaces).isEmpty ||
                           displayName.trimmingCharacters(in: .whitespaces).isEmpty)
                 .opacity((name.trimmingCharacters(in: .whitespaces).isEmpty ||
                           displayName.trimmingCharacters(in: .whitespaces).isEmpty) ? 0.4 : 1)

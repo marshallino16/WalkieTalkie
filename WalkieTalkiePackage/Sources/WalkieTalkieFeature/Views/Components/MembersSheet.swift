@@ -54,7 +54,7 @@ struct MembersSheet: View {
                     List {
                         ForEach(members) { member in
                             memberRow(member)
-                                .listRowBackground(WTTheme.darkGray)
+                                .listRowBackground(Color.clear)
                                 .listRowSeparator(.hidden)
                                 .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -99,7 +99,7 @@ struct MembersSheet: View {
                             Section {
                                 ForEach(bans) { ban in
                                     bannedRow(ban)
-                                        .listRowBackground(WTTheme.darkGray)
+                                        .listRowBackground(Color.clear)
                                         .listRowSeparator(.hidden)
                                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                                 }

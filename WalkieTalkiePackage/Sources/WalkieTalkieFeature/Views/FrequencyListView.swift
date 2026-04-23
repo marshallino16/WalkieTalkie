@@ -90,6 +90,7 @@ struct FrequencyListView: View {
                         }
                     }
                 },
+                onClearError: { viewModel.clearError() },
                 cloudKit: viewModel.cloudKit,
                 joinedCodes: Set(viewModel.frequencies.map(\.code)),
                 onJoinPublic: { frequency, displayName in

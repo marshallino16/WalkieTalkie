@@ -74,6 +74,7 @@ docs/
 
 # Claude / AI tooling
 .claude/
+.superpowers/
 
 # Secrets
 .env

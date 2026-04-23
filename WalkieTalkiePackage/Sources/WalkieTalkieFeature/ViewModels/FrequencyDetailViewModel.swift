@@ -17,6 +17,12 @@ final class FrequencyDetailViewModel {
     private(set) var isSending = false
     private(set) var playingMessageID: String?
     private(set) var bans: [FrequencyBan] = []
+    private(set) var removalReason: RemovalReason?
+
+    enum RemovalReason: Equatable {
+        case kicked
+        case banned
+    }
 
     private var refreshTimer: Timer?
     private var listenedMessageIDs: Set<String>
@@ -83,9 +89,21 @@ final class FrequencyDetailViewModel {
 
     private func loadMembers() async {
         do {
-            members = try await cloudKit.fetchMembers(for: frequency)
+            let fetched = try await cloudKit.fetchMembers(for: frequency)
+            members = fetched
+            // Only check removal if user is missing from the returned page.
+            // The member list may be incomplete (CloudKit returns max ~100 results),
+            // so we do a targeted query to confirm before showing the kick overlay.
+            if !fetched.isEmpty && !fetched.contains(where: { $0.userID == userID }) {
+                let stillMember = try await cloudKit.isUserMember(userID: userID, of: frequency)
+                if !stillMember {
+                    stopPolling()
+                    let isBanned = (try? await cloudKit.isUserBanned(userID: userID, from: frequency)) ?? false
+                    removalReason = isBanned ? .banned : .kicked
+                }
+            }
         } catch {
-            // Silent fail
+            // Silent fail — don't trigger removal on network errors
         }
     }
 

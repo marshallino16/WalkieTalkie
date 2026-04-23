@@ -143,15 +143,13 @@ final class FrequencyListViewModel {
                 let record = frequency.toRecord()
                 _ = try await cloudKit.publicDB.save(record)
                 Log.cloudkit.info("Frequency saved: \(code, privacy: .public)")
-                // Join as creator
-                let member = FrequencyMember(
-                    frequencyRef: CKRecord.Reference(recordID: frequency.ckRecordID, action: .none),
-                    userID: userID,
-                    displayName: displayName,
-                    role: .creator
-                )
-                _ = try await cloudKit.publicDB.save(member.toRecord())
+                try await cloudKit.joinFrequency(frequency, userID: userID, displayName: displayName)
                 Log.cloudkit.info("Creator joined: \(displayName, privacy: .public)")
+                // Best-effort: upgrade role to creator
+                let members = try? await cloudKit.fetchMembers(for: frequency)
+                if let myMember = members?.first(where: { $0.userID == userID }) {
+                    try? await cloudKit.setMemberRole(myMember, role: .creator)
+                }
                 try? await cloudKit.subscribeToMessages(for: frequency)
             } catch {
                 Log.cloudkit.error("Create frequency error: \(error, privacy: .public)")
@@ -169,7 +167,12 @@ final class FrequencyListViewModel {
 
     // MARK: - Join
 
+    func clearError() {
+        error = nil
+    }
+
     func joinFrequency(code: String, displayName: String) async -> Frequency? {
+        error = nil
         guard cloudKit.isAvailable else {
             self.error = L10n.string("error.icloudNotAvailable")
             return nil
@@ -186,6 +189,9 @@ final class FrequencyListViewModel {
             frequencies.insert(frequency, at: 0)
             saveLocal()
             return frequency
+        } catch let error as CloudKitError where error == .displayNameTaken {
+            self.error = L10n.string("error.pseudoTaken")
+            return nil
         } catch let error as CKError where error.code == .unknownItem {
             self.error = L10n.string("error.indexMissing")
             return nil
@@ -216,6 +222,9 @@ final class FrequencyListViewModel {
             return frequency
         } catch let error as CloudKitError where error == .userBanned {
             self.error = L10n.string("error.banned")
+            return nil
+        } catch let error as CloudKitError where error == .displayNameTaken {
+            self.error = L10n.string("error.pseudoTaken")
             return nil
         } catch {
             self.error = L10n.string("error.joinFailed", error.localizedDescription)

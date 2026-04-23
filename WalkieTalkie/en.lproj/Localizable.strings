@@ -95,6 +95,7 @@
 "explorer.join" = "JOIN";
 "error.banned" = "You are banned from this channel";
 "error.alreadyJoined" = "You already joined this channel";
+"error.pseudoTaken" = "This name is already taken in this channel";
 
 /* Moderation */
 "members.role.creator" = "CREATOR";
@@ -112,3 +113,10 @@
 "members.promote.title" = "Promote to moderator?";
 "members.promote.message" = "%@ will be able to kick and ban members";
 "members.promote.button" = "Promote";
+
+/* Removal Overlay */
+"removal.kicked.title" = "You've been removed";
+"removal.kicked.message" = "A moderator removed you from the frequency \"%@\"";
+"removal.banned.title" = "You've been banned";
+"removal.banned.message" = "You have been permanently banned from the frequency \"%@\". You can no longer rejoin.";
+"removal.dismiss" = "GOT IT";

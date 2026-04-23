@@ -95,6 +95,7 @@
 "explorer.join" = "REJOINDRE";
 "error.banned" = "Vous êtes banni de ce canal";
 "error.alreadyJoined" = "Vous avez déjà rejoint ce canal";
+"error.pseudoTaken" = "Ce pseudo est déjà pris dans ce canal";
 
 /* Modération */
 "members.role.creator" = "CRÉATEUR";
@@ -112,3 +113,10 @@
 "members.promote.title" = "Nommer modérateur ?";
 "members.promote.message" = "%@ pourra kick et bannir des membres";
 "members.promote.button" = "Nommer";
+
+/* Removal Overlay */
+"removal.kicked.title" = "Tu as été exclu";
+"removal.kicked.message" = "Un modérateur t'a retiré de la fréquence \"%@\"";
+"removal.banned.title" = "Tu as été banni";
+"removal.banned.message" = "Tu as été définitivement banni de la fréquence \"%@\". Tu ne pourras plus la rejoindre.";
+"removal.dismiss" = "J'AI COMPRIS";

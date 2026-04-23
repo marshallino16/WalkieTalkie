@@ -71,6 +71,10 @@ public struct ContentView: View {
                     onDelete: {
                         listViewModel.deleteFrequency(frequency)
                         navigationPath.removeLast()
+                    },
+                    onKicked: {
+                        listViewModel.leaveFrequency(frequency)
+                        navigationPath.removeLast()
                     }
                 )
             }
