@@ -413,6 +413,44 @@ final class CloudKitManager {
         }
     }
 
+    // MARK: - Admin
+
+    /// Fetch the superadmin password from the AdminConfig record in CloudKit
+    func fetchAdminPassword() async -> String? {
+        let predicate = NSPredicate(format: "key == %@", "password")
+        let query = CKQuery(recordType: "AdminConfig", predicate: predicate)
+        guard let (results, _) = try? await publicDB.records(matching: query, resultsLimit: 1),
+              let (_, result) = results.first,
+              let record = try? result.get() else { return nil }
+        return record["value"] as? String
+    }
+
+    /// Fetch ALL frequencies (public + private) — admin only
+    func fetchAllFrequencies() async -> [Frequency] {
+        let predicate = NSPredicate(value: true)
+        let query = CKQuery(recordType: Frequency.recordType, predicate: predicate)
+        query.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
+        guard let (results, _) = try? await publicDB.records(matching: query) else { return [] }
+        return results.compactMap { _, result in
+            guard case .success(let record) = result else { return nil }
+            return Frequency(record: record)
+        }
+    }
+
+    /// Fetch ALL messages for a frequency (including expired, last 24h) — admin only
+    func fetchAllMessages(for frequency: Frequency) async throws -> [VoiceMessage] {
+        let ref = CKRecord.Reference(recordID: frequency.ckRecordID, action: .none)
+        let oneDayAgo = Date.now.addingTimeInterval(-24 * 60 * 60)
+        let predicate = NSPredicate(format: "frequencyRef == %@ AND createdAt > %@", ref, oneDayAgo as NSDate)
+        let query = CKQuery(recordType: VoiceMessage.recordType, predicate: predicate)
+        query.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
+        let (results, _) = try await publicDB.records(matching: query, resultsLimit: 100)
+        return results.compactMap { _, result in
+            guard let record = try? result.get() else { return nil }
+            return VoiceMessage(record: record)
+        }
+    }
+
     // MARK: - Delete Frequency (creator only)
 
     func deleteFrequency(_ frequency: Frequency) async throws {
