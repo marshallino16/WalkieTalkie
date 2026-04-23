@@ -8,6 +8,8 @@ public struct ContentView: View {
     @State private var listViewModel: FrequencyListViewModel?
     @State private var navigationPath = NavigationPath()
     @State private var pendingDeepLinkCode: String?
+    @State private var showAdminPanel = false
+    @State private var showAdminAuthenticated = false
 
     private var userID: String { KeychainManager.getUserID() }
 
@@ -41,6 +43,15 @@ public struct ContentView: View {
         }
         .onOpenURL { url in
             handleDeepLink(url)
+        }
+        .fullScreenCover(isPresented: $showAdminPanel) {
+            AdminPasswordView(cloudKit: cloudKit) {
+                showAdminPanel = false
+                showAdminAuthenticated = true
+            }
+        }
+        .fullScreenCover(isPresented: $showAdminAuthenticated) {
+            AdminPanelView(cloudKit: cloudKit)
         }
     }
 
@@ -97,13 +108,17 @@ public struct ContentView: View {
     // MARK: - Deep Links
 
     private func handleDeepLink(_ url: URL) {
-        // walkietalkie://join/XKCD-4782
-        guard url.scheme == "walkietalkie",
-              url.host == "join",
-              let code = url.pathComponents.last, code != "/"
-        else { return }
+        guard url.scheme == "walkietalkie" else { return }
 
-        pendingDeepLinkCode = code.uppercased()
+        switch url.host {
+        case "join":
+            guard let code = url.pathComponents.last, code != "/" else { return }
+            pendingDeepLinkCode = code.uppercased()
+        case "admin":
+            showAdminPanel = true
+        default:
+            break
+        }
     }
 
     private func handleJoinFromDeepLink(code: String, listViewModel: FrequencyListViewModel) {
